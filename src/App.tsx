@@ -1,47 +1,68 @@
 import { useEffect, useState } from 'react'
 import { fetchData } from './services/PictureBookApi'
-import type { PictureBookData } from './types/api'
+import type { LivlyInfo } from './types/api'
+import { createQuestion, type Question, toQuizCandidates } from './utils/quiz'
 import './App.css'
 
+interface QuizState {
+  candidates: LivlyInfo[]
+  question: Question
+}
+
 function App() {
-  const [data, setData] = useState<PictureBookData | null>(null)
+  const [quiz, setQuiz] = useState<QuizState | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
-    fetchData().then(setData, setError)
+    fetchData()
+      .then((data) => {
+        const candidates = toQuizCandidates(data.mono)
+        setQuiz({ candidates, question: createQuestion(candidates) })
+      })
+      .catch(setError)
   }, [])
 
   if (error) {
     return <p className="status">データの取得に失敗しました: {error.message}</p>
   }
-  if (!data) {
+  if (!quiz) {
     return <p className="status">読み込み中…</p>
   }
 
-  const { mono, updateInfo } = data
-  const { year, month, day } = updateInfo.updateAt
+  const { candidates, question } = quiz
+
+  const answer = (choice: LivlyInfo) => {
+    alert(
+      choice.id === question.answer.id
+        ? '正解！'
+        : `不正解… 正解は「${question.answer.kind}」`,
+    )
+    setQuiz({ candidates, question: createQuestion(candidates) })
+  }
 
   return (
-    <main className="page">
-      <header className="page-header">
-        <h1>リヴリー一覧</h1>
-        <p className="meta">
-          {mono.length}体 ・ 図鑑更新日 {year}/{month}
-          {day !== undefined && `/${day}`}
-        </p>
-      </header>
+    <main className="quiz">
+      <div className="silhouette-frame">
+        {/* key で問題ごとに作り直し、新しい画像の読み込み中に前の問題の画像が残らないようにする */}
+        <img
+          key={question.answer.id}
+          className="silhouette"
+          src={question.answer.firstViewImgPath}
+          alt="このリヴリーはだれ？"
+          draggable={false}
+        />
+      </div>
 
-      <ul className="livly-grid">
-        {mono.map((livly) => (
-          <li key={livly.id} className="livly-card">
-            <img
-              className="livly-image"
-              src={livly.firstViewImgPath}
-              alt={livly.kind}
-              loading="lazy"
-              decoding="async"
-            />
-            <span className="livly-name">{livly.kind}</span>
+      <ul className="choices">
+        {question.choices.map((choice) => (
+          <li key={choice.id}>
+            <button
+              type="button"
+              className="choice"
+              onClick={() => answer(choice)}
+            >
+              {choice.kind}
+            </button>
           </li>
         ))}
       </ul>
