@@ -1,13 +1,17 @@
-.page {
-  padding: 24px 16px 48px;
-}
+.quiz {
+  min-height: 100svh;
+  box-sizing: border-box;
+  padding: 48px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
 
-.page-header {
-  margin-bottom: 24px;
-}
-
-.meta {
-  font-size: 14px;
+  @media (max-width: 480px) {
+    padding: 32px 16px;
+    gap: 32px;
+  }
 }
 
 .status {
@@ -15,36 +19,71 @@
   text-align: center;
 }
 
-.livly-grid {
+.silhouette-frame {
+  width: min(320px, 100%);
+  aspect-ratio: 1;
+  /* flex アイテムの min-height: auto で画像の元サイズまで広がるのを防ぐ */
+  min-height: 0;
+  overflow: hidden;
+
+  @media (max-width: 480px) {
+    width: min(240px, 100%);
+  }
+}
+
+.silhouette {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* 画像を真っ黒にしてシルエットにする */
+  filter: brightness(0);
+  user-select: none;
+
+  /* ダークモードでは黒だと背景に溶けるので白抜きにする */
+  @media (prefers-color-scheme: dark) {
+    filter: brightness(0) invert(1);
+  }
+}
+
+.choices {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
-}
-
-.livly-card {
+  width: min(560px, 100%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 8px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card-bg);
+  gap: 28px;
+
+  @media (max-width: 480px) {
+    gap: 16px;
+  }
 }
 
-.livly-image {
+.choice {
   width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
-}
-
-.livly-name {
-  font-size: 13px;
-  line-height: 1.3;
+  min-height: 72px;
+  padding: 12px 24px;
+  border: 1px solid var(--text-h);
+  border-radius: 9999px;
+  background: var(--bg);
   color: var(--text-h);
-  text-align: center;
-  overflow-wrap: anywhere;
+  font: inherit;
+  font-size: 28px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background: var(--card-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text-h);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 480px) {
+    min-height: 60px;
+    font-size: 20px;
+  }
 }
