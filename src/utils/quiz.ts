@@ -58,3 +58,28 @@ export function createQuestion(candidates: LivlyInfo[]): Question {
   const answer = choices[Math.floor(Math.random() * CHOICE_COUNT)]
   return { answer, choices }
 }
+
+/** 紹介モーダルのサムネイルに使うモーション（図鑑データの motions[].label） */
+const PROFILE_MOTION_LABELS = new Set([
+  '待機',
+  '移動',
+  '食べる',
+  'トイレ',
+  'シャワー',
+  '眠る',
+  'つままれる',
+  '固有',
+  'ペアポーズ',
+])
+
+/**
+ * 紹介モーダルのサムネイルを、対象のモーションからランダムに 1 つ選ぶ。
+ * 該当するモーションがなければ、通常の大きい画像を使う。
+ */
+export function pickProfileThumbnail(livly: LivlyInfo): string {
+  const motions = (livly.motions ?? []).filter((motion) =>
+    PROFILE_MOTION_LABELS.has(motion.label),
+  )
+  if (motions.length === 0) return livly.firstViewImgPath
+  return motions[Math.floor(Math.random() * motions.length)].thumbnailPath
+}
