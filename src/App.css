@@ -432,6 +432,17 @@
     animation: animation-modal-fade-in 0.25s ease-out;
   }
 
+  /* 閉じるときは逆に、不透明から透明へ消す（消え終わってから LivlyProfileModal で閉じる） */
+  &[data-closing],
+  &[data-closing]::backdrop {
+    animation: animation-modal-fade-out 0.25s ease-in forwards;
+  }
+
+  /* 消えている途中は操作させない */
+  &[data-closing] {
+    pointer-events: none;
+  }
+
   @media (max-width: 480px) {
     padding: 32px 16px;
   }
@@ -446,9 +457,20 @@
   }
 }
 
+@keyframes animation-modal-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .profile-modal[open],
-  .profile-modal[open]::backdrop {
+  .profile-modal[open]::backdrop,
+  .profile-modal[data-closing],
+  .profile-modal[data-closing]::backdrop {
     animation: none;
   }
 }
