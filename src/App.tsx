@@ -1,8 +1,22 @@
-import { useEffect, useState } from 'react'
+import { type SyntheticEvent, useEffect, useState } from 'react'
 import { fetchData } from './services/PictureBookApi'
 import type { LivlyInfo } from './types/api'
 import { createQuestion, type Question, toQuizCandidates } from './utils/quiz'
 import './App.css'
+
+/**
+ * 画像の読み込みが終わったら、枠 (.silhouette-frame) に data-shown を付けて CSS の落下
+ * アニメーションを始める（livly-ratio の dropInOnReveal をクイズ用にしたもの）。
+ * クイズの画像は 1 体で最初から画面内にあるので、画面に入ったときではなく読み込み完了で始める。
+ * 読み込み前に始めると、落ちてくる途中が空のまま終わってしまうため
+ */
+function dropIn(event: SyntheticEvent<HTMLImageElement>) {
+  const frame = event.currentTarget.parentElement
+  if (!frame) return
+  // 足元から画面の上端までの距離。落下の開始位置をここより上にして、開始位置が見えないようにする
+  frame.style.setProperty('--drop-distance', `${frame.getBoundingClientRect().bottom}px`)
+  frame.dataset.shown = ''
+}
 
 interface QuizState {
   candidates: LivlyInfo[]
@@ -42,14 +56,15 @@ function App() {
 
   return (
     <main className="quiz">
-      <div className="silhouette-frame">
-        {/* key で問題ごとに作り直し、新しい画像の読み込み中に前の問題の画像が残らないようにする */}
+      {/* key で問題ごとに枠を作り直す。新しい画像の読み込み中に前の問題の画像が残らず、
+          data-shown も消えて登場アニメーションが毎問最初から再生される */}
+      <div key={question.answer.id} className="silhouette-frame">
         <img
-          key={question.answer.id}
           className="silhouette"
           src={question.answer.firstViewImgPath}
           alt="このリヴリーはだれ？"
           draggable={false}
+          onLoad={dropIn}
         />
       </div>
 

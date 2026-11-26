@@ -20,11 +20,9 @@
 }
 
 .silhouette-frame {
+  position: relative;
   width: min(320px, 100%);
   aspect-ratio: 1;
-  /* flex アイテムの min-height: auto で画像の元サイズまで広がるのを防ぐ */
-  min-height: 0;
-  overflow: hidden;
 
   @media (max-width: 480px) {
     width: min(240px, 100%);
@@ -32,12 +30,49 @@
 }
 
 .silhouette {
+  /* 絶対配置にして、画像の元サイズで枠が広がらないようにする。
+     登場アニメーションで枠の外（上）から降りてくるので、枠で切り抜かない */
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
+  /* 足元を枠の下端に揃え、着地点と伸び縮みの基準を足元にする */
+  object-position: center bottom;
   /* 画像を真っ黒にしてシルエットにする */
   filter: brightness(0);
   user-select: none;
+}
+
+/* 登場アニメーション（livly-ratio と同じ動き）: 画像の読み込みが終わるまでは隠し、
+   終わったら (data-shown) 縦長のまま上から落ちてきて、通常の縦横比で着地する。
+   足元から画面上端までの距離 (--drop-distance) は App.tsx で付ける。開始位置は自身の高さの
+   9 倍と --drop-distance の遠いほうにし、必ず画面の上端の外から落ちてくるようにする */
+.silhouette-frame:not([data-shown]) .silhouette {
+  visibility: hidden;
+}
+
+.silhouette-frame[data-shown] .silhouette {
+  transform-origin: bottom;
+  animation: animation-livly-show 0.5s linear both;
+}
+
+@keyframes animation-livly-show {
+  0% {
+    transform: translateY(min(-900%, calc(-1 * var(--drop-distance, 0px)))) scale(1, 2);
+  }
+  15% {
+    transform: scale(1, 2);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .silhouette-frame[data-shown] .silhouette {
+    animation: none;
+  }
 }
 
 .choices {
