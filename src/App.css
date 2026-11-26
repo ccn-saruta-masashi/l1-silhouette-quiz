@@ -126,13 +126,14 @@
   }
 }
 
-/* スタート画面の「クイズをはじめる」ボタンの枠。選択肢と同じ幅にする */
-.start-action {
+/* 1 つだけ置くボタン（「クイズをはじめる」「つぎの問題にすすむ」）の枠。選択肢と同じ幅にする */
+.single-action {
   width: min(560px, 100%);
 }
 
-/* スタート画面の吹き出しとリヴリーをひとまとまりにする（吹き出しの突端をリヴリーに近づける） */
-.start-stage {
+/* 吹き出しとリヴリーをひとまとまりにする（吹き出しの突端をリヴリーに近づける）。
+   スタート画面と問題画面で共通 */
+.livly-stage {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -224,6 +225,16 @@
   font-weight: 900;
   line-height: 1.5;
   text-align: center;
+  /* 中の名前 (.speech-bubble-name) を、この幅に合わせて縮めるための基準 */
+  container-type: inline-size;
+}
+
+/* 結果画面の吹き出しのリヴリー名。長い名前は 1 行に収まるまで文字を小さくする
+   （--name-length は App.tsx で付ける文字数。全角 1 文字 ≒ 1em として幅を割る） */
+.speech-bubble-name {
+  display: inline-block;
+  font-size: min(1em, 100cqi / var(--name-length, 1));
+  white-space: nowrap;
 }
 
 /* 「次へ進む」アイコン。ボタンの文字は中央のまま、右端に置く */
