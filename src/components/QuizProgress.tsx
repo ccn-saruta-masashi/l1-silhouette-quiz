@@ -5,6 +5,8 @@ interface QuizProgressProps {
   current: number | null
   /** 答えた問題の正誤。前から順に、正解なら true */
   results: readonly boolean[]
+  /** 「見直し」など、今どんな問題を解いているかを示す小さなラベル */
+  label?: string
 }
 
 type DotState = 'correct' | 'incorrect' | 'upcoming'
@@ -14,20 +16,26 @@ type DotState = 'correct' | 'incorrect' | 'upcoming'
  * ドットは答えた問題を正解なら緑・不正解なら赤で塗り、今の問題を金の輪で示す。
  * 見た目は読み上げから隠し、まとめた一文を別に読ませる
  */
-export function QuizProgress({ total, current, results }: QuizProgressProps) {
+export function QuizProgress({
+  total,
+  current,
+  results,
+  label,
+}: QuizProgressProps) {
   const correctCount = results.filter(Boolean).length
 
   return (
     <section className="quiz-progress">
       <p className="visually-hidden">
         {current !== null
-          ? `${total}問中${current}問目、正解${correctCount}問`
+          ? `${label ? `${label}、` : ''}${total}問中${current}問目、正解${correctCount}問`
           : `${total}問中${correctCount}問正解`}
       </p>
 
       <div className="quiz-progress-head" aria-hidden="true">
         {current !== null && (
           <p className="quiz-progress-count">
+            {label && <span className="quiz-progress-label">{label}</span>}
             <span className="quiz-progress-q">Q.</span>
             <span className="quiz-progress-current">{current}</span>
             <span className="quiz-progress-total">/ {total}</span>

@@ -41,6 +41,11 @@ function shuffle<T>(items: readonly T[]): T[] {
   return result
 }
 
+/** 同じ問題（正解と選択肢）のまま、選択肢の並び順だけ変える（見直しで出し直すとき用） */
+export function reshuffleChoices(question: Question): Question {
+  return { ...question, choices: shuffle(question.choices) }
+}
+
 /** 候補からランダムに 1 体選ぶ（スタート画面の表示用）。 */
 export function pickRandom(candidates: LivlyInfo[]): LivlyInfo {
   if (candidates.length === 0) {

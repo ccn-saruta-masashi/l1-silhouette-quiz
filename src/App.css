@@ -823,7 +823,7 @@
   }
 }
 
-/* 仮の終了画面（きちんとした結果画面は別 Issue で作る） */
+/* 結果画面の正解数（「10問中」「◯問正解」と正誤のドット） */
 .quiz-finish {
   display: grid;
   justify-items: center;
@@ -859,4 +859,85 @@
   font-size: 96px;
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
+}
+
+/* 見直し中に「Q.」の前に出す小さなラベル */
+.quiz-progress-label {
+  align-self: center;
+  margin-right: 8px;
+  padding: 5px 10px;
+  border-radius: 9999px;
+  background: var(--button-bg);
+  color: var(--button-text);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+/* 結果画面の称号とひとことコメント。中央揃えの 1 カラム */
+.quiz-rank {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  width: min(560px, 100%);
+  text-align: center;
+  /* 日本語を文節で折り返し、行の長さをそろえて読みやすくする */
+  word-break: auto-phrase;
+  text-wrap: balance;
+}
+
+.quiz-rank-lead {
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.04em;
+
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
+}
+
+.quiz-rank-number {
+  margin-right: 2px;
+  color: var(--button-bg);
+  font-size: 40px;
+  font-variant-numeric: tabular-nums;
+
+  @media (max-width: 480px) {
+    font-size: 32px;
+  }
+}
+
+.quiz-rank-title {
+  margin: 0;
+  font-size: clamp(28px, 8vw, 52px);
+  font-weight: 900;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+}
+
+.quiz-rank-comment {
+  font-size: clamp(16px, 4.4vw, 22px);
+  line-height: 1.8;
+  letter-spacing: 0.04em;
+}
+
+/* ボタンを縦に並べる（結果画面の「もう一度あそぶ」「不正解だった問題を見直す」） */
+.single-action.--stack {
+  display: grid;
+  gap: 28px;
+
+  @media (max-width: 480px) {
+    gap: 16px;
+  }
+}
+
+/* 文字数の多いボタン（「不正解だった問題を見直す」）。スマホ幅では文字を少し小さくして 1 行に収める。
+   収まらない幅でも、文節の切れ目で折り返す */
+.pill-button.--long-label {
+  word-break: auto-phrase;
+
+  @media (max-width: 480px) {
+    font-size: 17px;
+    letter-spacing: 0.02em;
+  }
 }

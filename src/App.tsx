@@ -23,8 +23,10 @@ import {
   pickRandom,
   QUESTION_COUNT,
   type Question,
+  reshuffleChoices,
   toQuizCandidates,
 } from './utils/quiz'
+import { rankFor } from './utils/rank'
 import './App.css'
 
 /**
@@ -102,13 +104,18 @@ interface QuizState {
   featured: LivlyInfo
   /** 「クイズをはじめる」を押したか。false の間はスタート画面を出す */
   started: boolean
+  /**
+   * 今の場面。quiz は 10 問の本番、review は不正解だった問題の見直し、
+   * finished は結果画面
+   */
+  phase: 'quiz' | 'review' | 'finished'
   question: Question
-  /** 何問目か（1 始まり）。問題ごとにリヴリーの枠を作り直す key にも使う */
+  /** 今の場面で何問目か（1 始まり）。問題ごとにリヴリーの枠を作り直す key にも使う */
   round: number
-  /** 答えた問題の正解のリヴリーと正誤。前から順に並ぶ */
-  history: { livlyId: string; correct: boolean }[]
-  /** 10 問を終えて、終了画面を出しているか */
-  finished: boolean
+  /** 本番で出した問題と正誤。前から順に並ぶ。見直しで正解した問題は正解に数え直す */
+  history: { question: Question; correct: boolean }[]
+  /** 見直しの記録。targets は見直す問題の history の添字、results はその正誤 */
+  review: { targets: number[]; results: boolean[] } | null
   /** 押した選択肢。押してから次の問題に進むまでの間、リヴリーをカラーで表示する */
   selected: LivlyInfo | null
   /** 正誤のマークを見せ終えて、結果画面（吹き出しと「つぎの問題にすすむ」）を出しているか */
@@ -136,9 +143,10 @@ function App() {
           featured: pickRandom(candidates),
           started: false,
           question: createQuestion(candidates),
+          phase: 'quiz',
           round: 1,
           history: [],
-          finished: false,
+          review: null,
           selected: null,
           showResult: false,
         })
@@ -164,14 +172,19 @@ function App() {
   const {
     featured,
     started,
+    phase,
     question,
     round,
     history,
-    finished,
+    review,
     selected,
     showResult,
   } = quiz
   const results = history.map(({ correct }) => correct)
+  /** 見直していない（まだ不正解のままの）問題の history の添字 */
+  const incorrectIndices = history.flatMap(({ correct }, index) =>
+    correct ? [] : [index],
+  )
 
   /** 紹介モーダルを開く。サムネイルは開くたびにランダムで選び直す */
   const openProfile = (livly: LivlyInfo) =>
@@ -238,40 +251,60 @@ function App() {
     // 選択肢ではボタンの音は鳴らさず、正解・不正解の音だけにする（重なってうるさくならないように）
     if (choice.id === question.answer.id) playCorrectSound()
     else playIncorrectSound()
+    const correct = choice.id === question.answer.id
     setQuiz({
       ...quiz,
       selected: choice,
-      history: [
-        ...history,
-        {
-          livlyId: question.answer.id,
-          correct: choice.id === question.answer.id,
-        },
-      ],
+      ...(review
+        ? { review: { ...review, results: [...review.results, correct] } }
+        : { history: [...history, { question, correct }] }),
     })
     setTimeout(() => {
       setQuiz((current) => current && { ...current, showResult: true })
     }, REVEAL_DURATION)
   }
 
-  const isLastRound = round >= QUESTION_COUNT
+  /** 今の場面の問題数（本番は 10 問、見直しは不正解だった問題の数） */
+  const roundCount = review ? review.targets.length : QUESTION_COUNT
+  const isLastRound = round >= roundCount
 
-  /** 次の問題へ進む。出題済みのリヴリーは正解にしない。最後の問題のあとは終了画面へ */
+  /** 問題を始めるときの共通の状態（選択も結果画面もなし） */
+  const freshRound = { selected: null, showResult: false }
+
+  /**
+   * 次の問題へ進む。本番では出題済みのリヴリーを正解にしない。
+   * 最後の問題のあとは結果画面へ。見直しのあとは、見直しで正解した問題を正解に数え直す
+   */
   const goNext = () => {
     playTapSound()
     if (isLastRound) {
-      setQuiz({ ...quiz, finished: true })
+      const updatedHistory = review
+        ? history.map((entry, index) => {
+            const at = review.targets.indexOf(index)
+            return at !== -1 && review.results[at]
+              ? { ...entry, correct: true }
+              : entry
+          })
+        : history
+      setQuiz({
+        ...quiz,
+        ...freshRound,
+        phase: 'finished',
+        history: updatedHistory,
+        review: null,
+      })
       return
     }
     setQuiz({
       ...quiz,
-      question: createQuestion(
-        quiz.candidates,
-        new Set(history.map(({ livlyId }) => livlyId)),
-      ),
+      ...freshRound,
+      question: review
+        ? reshuffleChoices(history[review.targets[round]].question)
+        : createQuestion(
+            quiz.candidates,
+            new Set(history.map((entry) => entry.question.answer.id)),
+          ),
       round: round + 1,
-      selected: null,
-      showResult: false,
     })
   }
 
@@ -280,18 +313,31 @@ function App() {
     playTapSound()
     setQuiz({
       ...quiz,
+      ...freshRound,
+      phase: 'quiz',
       question: createQuestion(quiz.candidates),
       round: 1,
       history: [],
-      finished: false,
-      selected: null,
-      showResult: false,
+      review: null,
     })
   }
 
-  // 仮の終了画面。きちんとした結果画面は別 Issue で作る
-  if (finished) {
+  /** 不正解だった問題だけを、同じ選択肢（並び順だけ変える）でもう一度出題する */
+  const startReview = () => {
+    playTapSound()
+    setQuiz({
+      ...quiz,
+      ...freshRound,
+      phase: 'review',
+      question: reshuffleChoices(history[incorrectIndices[0]].question),
+      round: 1,
+      review: { targets: incorrectIndices, results: [] },
+    })
+  }
+
+  if (phase === 'finished') {
     const correctCount = results.filter(Boolean).length
+    const rank = rankFor(correctCount)
     return (
       <Layout>
         <main className="quiz">
@@ -307,11 +353,31 @@ function App() {
               results={results}
             />
           </section>
-          <div className="single-action">
+
+          <section className="quiz-rank">
+            <p className="quiz-rank-lead">
+              <span className="quiz-rank-number">{correctCount}</span>
+              問正解のあなたは
+            </p>
+            <h2 className="quiz-rank-title">{rank.title}です。</h2>
+            <p className="quiz-rank-comment">{rank.comment}</p>
+          </section>
+
+          <div className="single-action --stack">
             <button type="button" className="pill-button" onClick={restart}>
               もう一度あそぶ
               <NextIcon />
             </button>
+            {incorrectIndices.length > 0 && (
+              <button
+                type="button"
+                className="pill-button --long-label"
+                onClick={startReview}
+              >
+                不正解だった問題を見直す
+                <NextIcon />
+              </button>
+            )}
           </div>
         </main>
       </Layout>
@@ -322,9 +388,10 @@ function App() {
     <Layout
       header={
         <QuizProgress
-          total={QUESTION_COUNT}
+          total={roundCount}
           current={round}
-          results={results}
+          results={review ? review.results : results}
+          label={review ? '見直し' : undefined}
         />
       }
       shake={selected !== null && selected.id !== question.answer.id}
@@ -355,7 +422,7 @@ function App() {
           )}
           {/* key で問題ごとに枠を作り直す。新しい画像の読み込み中に前の問題の画像が残らず、
               data-shown も消えて登場アニメーションが毎問最初から再生される */}
-          <div key={`question-${round}`} className="livly-frame --drop-in">
+          <div key={`${phase}-${round}`} className="livly-frame --drop-in">
             {/* 結果画面では、吹き出しと同じくリヴリーのタップでも紹介モーダルを開く。
                 画像を作り直さないよう、要素は変えずにクラスと onClick だけ切り替える */}
             <img
