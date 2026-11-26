@@ -10,6 +10,7 @@ import { LivlyProfileModal } from './components/LivlyProfileModal'
 import { NextIcon } from './components/NextIcon'
 import { QuizProgress } from './components/QuizProgress'
 import { SpeechBubble } from './components/SpeechBubble'
+import { celebrate, stopConfetti } from './services/Confetti'
 import { fetchData } from './services/PictureBookApi'
 import { playRankSound } from './services/RankSounds'
 import {
@@ -292,8 +293,12 @@ function App() {
               : entry
           })
         : history
-      // 結果画面の表示に合わせて、（見直し後は数え直した）正解数に応じた効果音を鳴らす
-      playRankSound(updatedHistory.filter(({ correct }) => correct).length)
+      // 結果画面の表示に合わせて、（見直し後は数え直した）正解数に応じた効果音を鳴らし、花吹雪を散らす
+      const correctCount = updatedHistory.filter(
+        ({ correct }) => correct,
+      ).length
+      playRankSound(correctCount)
+      celebrate(correctCount, QUESTION_COUNT)
       setQuiz({
         ...quiz,
         ...freshRound,
@@ -319,6 +324,7 @@ function App() {
   /** 1 問目・正解 0 からやり直す */
   const restart = () => {
     playTapSound()
+    stopConfetti()
     setQuiz({
       ...quiz,
       ...freshRound,
@@ -333,6 +339,7 @@ function App() {
   /** 不正解だった問題だけを、同じ選択肢（並び順だけ変える）でもう一度出題する */
   const startReview = () => {
     playTapSound()
+    stopConfetti()
     setQuiz({
       ...quiz,
       ...freshRound,
