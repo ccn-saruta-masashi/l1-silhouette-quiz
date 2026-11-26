@@ -47,7 +47,12 @@ interface QuizState {
   /** 「クイズをはじめる」を押したか。false の間はスタート画面を出す */
   started: boolean
   question: Question
+  /** 押した選択肢。押してから次の問題に進むまでの間、リヴリーをカラーで表示する */
+  selected: LivlyInfo | null
 }
+
+/** 選択肢を押してから結果を出すまで、カラーの姿を見せる時間（ms） */
+const REVEAL_DURATION = 1200
 
 function App() {
   const [quiz, setQuiz] = useState<QuizState | null>(null)
@@ -67,6 +72,7 @@ function App() {
           featured: pickRandom(candidates),
           started: false,
           question: createQuestion(candidates),
+          selected: null,
         })
       })
       .catch(setError)
@@ -87,7 +93,7 @@ function App() {
     )
   }
 
-  const { candidates, featured, started, question } = quiz
+  const { featured, started, question, selected } = quiz
 
   if (!started) {
     return (
@@ -140,13 +146,29 @@ function App() {
     )
   }
 
+  /**
+   * 押したらまずシルエットを外してカラーで見せ、少し待ってから結果を出して次の問題に進む。
+   * すぐ alert を出すと、描画の前に止まってカラーの姿が見えないため
+   */
   const answer = (choice: LivlyInfo) => {
-    alert(
-      choice.id === question.answer.id
-        ? '正解！'
-        : `不正解… 正解は「${question.answer.kind}」`,
-    )
-    setQuiz({ ...quiz, question: createQuestion(candidates) })
+    if (selected) return
+    setQuiz({ ...quiz, selected: choice })
+    setTimeout(() => {
+      alert(
+        choice.id === question.answer.id
+          ? '正解！'
+          : `不正解… 正解は「${question.answer.kind}」`,
+      )
+      setQuiz((current) =>
+        current
+          ? {
+              ...current,
+              question: createQuestion(current.candidates),
+              selected: null,
+            }
+          : current,
+      )
+    }, REVEAL_DURATION)
   }
 
   return (
@@ -159,9 +181,9 @@ function App() {
           className="livly-frame --drop-in"
         >
           <img
-            className="livly-figure --silhouette"
+            className={`livly-figure ${selected ? '' : '--silhouette'}`}
             src={question.answer.firstViewImgPath}
-            alt="このリヴリーはだれ？"
+            alt={selected ? question.answer.kind : 'このリヴリーはだれ？'}
             draggable={false}
             onLoad={dropIn}
           />
@@ -173,6 +195,7 @@ function App() {
               <button
                 type="button"
                 className="pill-button"
+                disabled={selected !== null}
                 onClick={() => answer(choice)}
               >
                 {choice.kind}
