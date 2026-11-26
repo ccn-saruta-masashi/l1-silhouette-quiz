@@ -29,13 +29,15 @@
   max-width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
+  /* 不正解で画面を揺らしたときや、正解数のパネルが拡大したときに、はみ出した分を切り取って
+     横スクロールが出ないようにする。body に付けると画面全体（viewport）に引き継がれて
+     hidden 扱いになり、スクロール自体は残るため、ここで切り取る */
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
   background: var(--bg);
-  /* 不正解で画面を揺らしたときに、横スクロールが出ないようにする */
-  overflow-x: clip;
 }
 
 p {

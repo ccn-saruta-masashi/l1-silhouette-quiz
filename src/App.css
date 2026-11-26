@@ -628,8 +628,9 @@
   line-height: 1;
   white-space: nowrap;
   letter-spacing: 0.04em;
-  /* 右端に置くので、拡大するときは左へ広げて画面からはみ出さないようにする */
-  transform-origin: right center;
+  /* パネルの中心を支点に、上下左右へ均等に拡大する。右端が画面からはみ出しても、
+     body の overflow-x: clip で横スクロールは出ない */
+  transform-origin: center;
 
   /* 正解して数が増えたとき、大きく飛び出してから弾んで元の大きさに戻る */
   &.--bump {
