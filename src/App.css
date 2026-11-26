@@ -254,12 +254,73 @@
   }
 }
 
+/* 選択肢の正誤マーク（○ / ×）。ボタンの文字は中央のまま、左端に置き、ポンと出す */
+.answer-mark {
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  width: 64px;
+  height: 64px;
+  overflow: visible;
+  translate: 0 -50%;
+  animation: animation-answer-mark-pop 0.3s ease-out both;
+
+  &.--correct circle {
+    fill: none;
+    stroke: var(--mark-correct);
+    stroke-width: 7;
+  }
+
+  &.--incorrect path {
+    fill: none;
+    stroke: var(--mark-incorrect);
+    stroke-width: 7;
+    stroke-linecap: round;
+  }
+
+  @media (max-width: 480px) {
+    left: 14px;
+    width: 46px;
+    height: 46px;
+  }
+}
+
+@keyframes animation-answer-mark-pop {
+  0% {
+    opacity: 0;
+    scale: 0.3;
+  }
+  70% {
+    opacity: 1;
+    scale: 1.15;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .answer-mark {
+    animation: none;
+  }
+}
+
 /* アイコンがあるボタンは、左右の余白をアイコン分そろえて文字を中央に保つ */
 .pill-button:has(.next-icon) {
   padding-inline: 72px;
 
   @media (max-width: 480px) {
     padding-inline: 56px;
+  }
+}
+
+/* 選択肢も左右の余白を正誤マーク分そろえる。マークが出たときに文字が動かないよう、
+   押す前から余白を取っておく */
+.choices .pill-button {
+  padding-inline: 96px;
+
+  @media (max-width: 480px) {
+    padding-inline: 64px;
   }
 }
 
