@@ -153,11 +153,14 @@ function App() {
               どんなリヴリー？
             </ProfileBubble>
             <div key={`start-${featured.id}`} className="livly-frame">
+              {/* 吹き出しと同じく、リヴリーのタップでも紹介モーダルを開く。
+                  キーボード・読み上げでは吹き出しのボタンから開けるので、ここはボタンにしない */}
               <img
-                className="livly-figure"
+                className="livly-figure --tappable"
                 src={featured.firstViewImgPath}
                 alt={featured.kind}
                 draggable={false}
+                onClick={() => openProfile(featured)}
               />
             </div>
           </div>
@@ -227,12 +230,17 @@ function App() {
           {/* key で問題ごとに枠を作り直す。新しい画像の読み込み中に前の問題の画像が残らず、
               data-shown も消えて登場アニメーションが毎問最初から再生される */}
           <div key={`question-${round}`} className="livly-frame --drop-in">
+            {/* 結果画面では、吹き出しと同じくリヴリーのタップでも紹介モーダルを開く。
+                画像を作り直さないよう、要素は変えずにクラスと onClick だけ切り替える */}
             <img
-              className={`livly-figure ${selected ? '' : '--silhouette'}`}
+              className={`livly-figure ${selected ? '' : '--silhouette'} ${showResult ? '--tappable' : ''}`}
               src={question.answer.firstViewImgPath}
               alt={selected ? question.answer.kind : 'このリヴリーはだれ？'}
               draggable={false}
               onLoad={dropIn}
+              onClick={
+                showResult ? () => openProfile(question.answer) : undefined
+              }
             />
           </div>
         </div>

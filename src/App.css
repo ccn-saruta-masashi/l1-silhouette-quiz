@@ -90,6 +90,12 @@
     filter: brightness(0);
   }
 
+  /* タップで紹介モーダルを開けるとき（スタート画面・結果画面） */
+  &.--tappable {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
