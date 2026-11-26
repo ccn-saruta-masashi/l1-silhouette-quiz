@@ -38,11 +38,6 @@
   /* 画像を真っ黒にしてシルエットにする */
   filter: brightness(0);
   user-select: none;
-
-  /* ダークモードでは黒だと背景に溶けるので白抜きにする */
-  @media (prefers-color-scheme: dark) {
-    filter: brightness(0) invert(1);
-  }
 }
 
 .choices {
@@ -63,10 +58,10 @@
   width: 100%;
   min-height: 72px;
   padding: 12px 24px;
-  border: 1px solid var(--text-h);
+  border: none;
   border-radius: 9999px;
-  background: var(--bg);
-  color: var(--text-h);
+  background: var(--button-bg);
+  color: var(--button-text);
   font: inherit;
   font-size: 28px;
   letter-spacing: 0.08em;
@@ -74,11 +69,11 @@
   transition: background-color 0.15s;
 
   &:hover {
-    background: var(--card-bg);
+    background: var(--button-bg-hover);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--text-h);
+    outline: 2px solid var(--text);
     outline-offset: 3px;
   }
 

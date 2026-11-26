@@ -1,30 +1,21 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
   --bg: #fff;
-  --border: #e5e4e7;
-  --card-bg: #faf9fb;
+  --text: rgb(104, 75, 9);
+  --button-bg: rgb(200, 166, 94);
+  --button-bg-hover: rgb(184, 150, 78);
+  --button-text: #fff;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 16px/1.5 var(--sans);
-  color-scheme: light dark;
+  /* ダークモードでも白背景のまま表示する */
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --card-bg: #1f2028;
-  }
 }
 
 #root {
@@ -37,13 +28,6 @@
 body {
   margin: 0;
   background: var(--bg);
-}
-
-h1 {
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--text-h);
-  margin: 0 0 4px;
 }
 
 p {
