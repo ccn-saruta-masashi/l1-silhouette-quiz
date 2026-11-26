@@ -11,6 +11,7 @@ import { NextIcon } from './components/NextIcon'
 import { QuizProgress } from './components/QuizProgress'
 import { SpeechBubble } from './components/SpeechBubble'
 import { fetchData } from './services/PictureBookApi'
+import { playRankSound } from './services/RankSounds'
 import {
   playCorrectSound,
   playIncorrectSound,
@@ -291,6 +292,8 @@ function App() {
               : entry
           })
         : history
+      // 結果画面の表示に合わせて、（見直し後は数え直した）正解数に応じた効果音を鳴らす
+      playRankSound(updatedHistory.filter(({ correct }) => correct).length)
       setQuiz({
         ...quiz,
         ...freshRound,
