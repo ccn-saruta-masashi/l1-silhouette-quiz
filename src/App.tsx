@@ -8,6 +8,7 @@ import {
 import { AnswerMark } from './components/AnswerMark'
 import { LivlyProfileModal } from './components/LivlyProfileModal'
 import { NextIcon } from './components/NextIcon'
+import { QuizProgress } from './components/QuizProgress'
 import { SpeechBubble } from './components/SpeechBubble'
 import { fetchData } from './services/PictureBookApi'
 import type { LivlyInfo } from './types/api'
@@ -15,6 +16,7 @@ import {
   createQuestion,
   pickProfileThumbnail,
   pickRandom,
+  QUESTION_COUNT,
   type Question,
   toQuizCandidates,
 } from './utils/quiz'
@@ -34,13 +36,35 @@ function dropIn(event: SyntheticEvent<HTMLImageElement>) {
   frame.dataset.shown = ''
 }
 
-/** タイトルと説明文のヘッダーを付けた画面の枠。読み込み中・エラー時も同じヘッダーを出す */
-function Layout({ children }: { children: ReactNode }) {
+/**
+ * タイトルと説明文のヘッダーを付けた画面の枠。読み込み中・エラー時も同じヘッダーを出す。
+ * header を渡すと、タイトルと説明文の代わりにそれを出す（クイズ中の進み具合など）。
+ * そのときもタイトルは読み上げ用に残す
+ */
+function Layout({
+  children,
+  header,
+  shake = false,
+}: {
+  children: ReactNode
+  header?: ReactNode
+  /** true にすると画面を揺らす（不正解のとき） */
+  shake?: boolean
+}) {
   return (
-    <div className="page">
+    <div className={`page ${shake ? '--shake' : ''}`}>
       <header className="site-header">
-        <h1 className="site-title">リヴリーシルエットクイズ</h1>
-        <p className="site-lead">あなたは何体 当てられるかな？</p>
+        {header ? (
+          <>
+            <h1 className="visually-hidden">リヴリーシルエットクイズ</h1>
+            {header}
+          </>
+        ) : (
+          <>
+            <h1 className="site-title">リヴリーシルエットクイズ</h1>
+            <p className="site-lead">あなたは何体 当てられるかな？</p>
+          </>
+        )}
       </header>
       {children}
     </div>
@@ -74,8 +98,12 @@ interface QuizState {
   /** 「クイズをはじめる」を押したか。false の間はスタート画面を出す */
   started: boolean
   question: Question
-  /** 何問目か。問題ごとにリヴリーの枠を作り直す key に使う（同じリヴリーが続けて出ても登場アニメーションを再生するため） */
+  /** 何問目か（1 始まり）。問題ごとにリヴリーの枠を作り直す key にも使う */
   round: number
+  /** 答えた問題の正解のリヴリーと正誤。前から順に並ぶ */
+  history: { livlyId: string; correct: boolean }[]
+  /** 10 問を終えて、終了画面を出しているか */
+  finished: boolean
   /** 押した選択肢。押してから次の問題に進むまでの間、リヴリーをカラーで表示する */
   selected: LivlyInfo | null
   /** 正誤のマークを見せ終えて、結果画面（吹き出しと「つぎの問題にすすむ」）を出しているか */
@@ -104,6 +132,8 @@ function App() {
           started: false,
           question: createQuestion(candidates),
           round: 1,
+          history: [],
+          finished: false,
           selected: null,
           showResult: false,
         })
@@ -126,7 +156,17 @@ function App() {
     )
   }
 
-  const { featured, started, question, round, selected, showResult } = quiz
+  const {
+    featured,
+    started,
+    question,
+    round,
+    history,
+    finished,
+    selected,
+    showResult,
+  } = quiz
+  const results = history.map(({ correct }) => correct)
 
   /** 紹介モーダルを開く。サムネイルは開くたびにランダムで選び直す */
   const openProfile = (livly: LivlyInfo) =>
@@ -187,24 +227,96 @@ function App() {
    */
   const answer = (choice: LivlyInfo) => {
     if (selected) return
-    setQuiz({ ...quiz, selected: choice })
+    setQuiz({
+      ...quiz,
+      selected: choice,
+      history: [
+        ...history,
+        {
+          livlyId: question.answer.id,
+          correct: choice.id === question.answer.id,
+        },
+      ],
+    })
     setTimeout(() => {
       setQuiz((current) => current && { ...current, showResult: true })
     }, REVEAL_DURATION)
   }
 
-  const goNext = () =>
+  const isLastRound = round >= QUESTION_COUNT
+
+  /** 次の問題へ進む。出題済みのリヴリーは正解にしない。最後の問題のあとは終了画面へ */
+  const goNext = () => {
+    if (isLastRound) {
+      setQuiz({ ...quiz, finished: true })
+      return
+    }
     setQuiz({
       ...quiz,
-      question: createQuestion(quiz.candidates),
+      question: createQuestion(
+        quiz.candidates,
+        new Set(history.map(({ livlyId }) => livlyId)),
+      ),
       round: round + 1,
       selected: null,
       showResult: false,
     })
+  }
+
+  /** 1 問目・正解 0 からやり直す */
+  const restart = () =>
+    setQuiz({
+      ...quiz,
+      question: createQuestion(quiz.candidates),
+      round: 1,
+      history: [],
+      finished: false,
+      selected: null,
+      showResult: false,
+    })
+
+  // 仮の終了画面。きちんとした結果画面は別 Issue で作る
+  if (finished) {
+    const correctCount = results.filter(Boolean).length
+    return (
+      <Layout>
+        <main className="quiz">
+          <section className="quiz-finish">
+            <p className="quiz-finish-lead">{QUESTION_COUNT}問中</p>
+            <p className="quiz-finish-score">
+              <span className="quiz-finish-number">{correctCount}</span>
+              問正解
+            </p>
+            <QuizProgress
+              total={QUESTION_COUNT}
+              current={null}
+              results={results}
+            />
+          </section>
+          <div className="single-action">
+            <button type="button" className="pill-button" onClick={restart}>
+              もう一度あそぶ
+              <NextIcon />
+            </button>
+          </div>
+        </main>
+      </Layout>
+    )
+  }
 
   return (
-    <Layout>
+    <Layout
+      header={
+        <QuizProgress
+          total={QUESTION_COUNT}
+          current={round}
+          results={results}
+        />
+      }
+      shake={selected !== null && selected.id !== question.answer.id}
+    >
       <main className="quiz">
+
         {/* 結果画面に切り替えても枠（と画像）を作り直さないよう、吹き出しの有無に関わらず
             同じ .livly-stage の中に置く。作り直すと登場アニメーションがもう一度再生されてしまう */}
         <div className="livly-stage">
@@ -248,7 +360,7 @@ function App() {
         {showResult ? (
           <div className="single-action">
             <button type="button" className="pill-button" onClick={goNext}>
-              つぎの問題にすすむ
+              {isLastRound ? '結果を見る' : 'つぎの問題にすすむ'}
               <NextIcon />
             </button>
           </div>
