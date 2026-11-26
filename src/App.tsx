@@ -1,4 +1,6 @@
 import { type ReactNode, type SyntheticEvent, useEffect, useState } from 'react'
+import { NextIcon } from './components/NextIcon'
+import { SpeechBubble } from './components/SpeechBubble'
 import { fetchData } from './services/PictureBookApi'
 import type { LivlyInfo } from './types/api'
 import {
@@ -86,13 +88,21 @@ function App() {
         <main className="quiz">
           {/* スタート画面は登場アニメーションなしでそのまま表示する（--drop-in を付けない）。
               key はクイズ側と別にし、最初の問題が同じリヴリーでも枠を作り直してアニメーションを再生させる */}
-          <div key={`start-${featured.id}`} className="livly-frame">
-            <img
-              className="livly-figure"
-              src={featured.firstViewImgPath}
-              alt={featured.kind}
-              draggable={false}
-            />
+          <div className="start-stage">
+            {/* タップでモーダルを開く処理は、モーダルを作るときに onClick で渡す */}
+            <SpeechBubble>
+              わたしは
+              <br />
+              どんなリヴリー？
+            </SpeechBubble>
+            <div key={`start-${featured.id}`} className="livly-frame">
+              <img
+                className="livly-figure"
+                src={featured.firstViewImgPath}
+                alt={featured.kind}
+                draggable={false}
+              />
+            </div>
           </div>
 
           <div className="start-action">
@@ -102,6 +112,7 @@ function App() {
               onClick={() => setQuiz({ ...quiz, started: true })}
             >
               クイズをはじめる
+              <NextIcon />
             </button>
           </div>
         </main>
