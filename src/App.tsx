@@ -1,4 +1,10 @@
-import { type ReactNode, type SyntheticEvent, useEffect, useState } from 'react'
+import {
+  type CSSProperties,
+  type ReactNode,
+  type SyntheticEvent,
+  useEffect,
+  useState,
+} from 'react'
 import { AnswerMark } from './components/AnswerMark'
 import { LivlyProfileModal } from './components/LivlyProfileModal'
 import { NextIcon } from './components/NextIcon'
@@ -41,6 +47,26 @@ function Layout({ children }: { children: ReactNode }) {
   )
 }
 
+/** リヴリーの吹き出し。タップでそのリヴリーの紹介モーダルを開く */
+function ProfileBubble({
+  livly,
+  onOpen,
+  children,
+}: {
+  livly: LivlyInfo
+  onOpen: (livly: LivlyInfo) => void
+  children: ReactNode
+}) {
+  return (
+    <SpeechBubble
+      label={`${livly.kind}の紹介を見る`}
+      onClick={() => onOpen(livly)}
+    >
+      {children}
+    </SpeechBubble>
+  )
+}
+
 interface QuizState {
   candidates: LivlyInfo[]
   /** スタート画面にカラーで表示するリヴリー */
@@ -48,11 +74,15 @@ interface QuizState {
   /** 「クイズをはじめる」を押したか。false の間はスタート画面を出す */
   started: boolean
   question: Question
+  /** 何問目か。問題ごとにリヴリーの枠を作り直す key に使う（同じリヴリーが続けて出ても登場アニメーションを再生するため） */
+  round: number
   /** 押した選択肢。押してから次の問題に進むまでの間、リヴリーをカラーで表示する */
   selected: LivlyInfo | null
+  /** 正誤のマークを見せ終えて、結果画面（吹き出しと「つぎの問題にすすむ」）を出しているか */
+  showResult: boolean
 }
 
-/** 選択肢を押してから次の問題に進むまで、カラーの姿と正誤のマークを見せる時間（ms） */
+/** 選択肢を押してから結果画面に切り替えるまで、正誤のマークを見せる時間（ms） */
 const REVEAL_DURATION = 2000
 
 function App() {
@@ -73,7 +103,9 @@ function App() {
           featured: pickRandom(candidates),
           started: false,
           question: createQuestion(candidates),
+          round: 1,
           selected: null,
+          showResult: false,
         })
       })
       .catch(setError)
@@ -94,7 +126,19 @@ function App() {
     )
   }
 
-  const { featured, started, question, selected } = quiz
+  const { featured, started, question, round, selected, showResult } = quiz
+
+  /** 紹介モーダルを開く。サムネイルは開くたびにランダムで選び直す */
+  const openProfile = (livly: LivlyInfo) =>
+    setProfile({ livly, thumbnail: pickProfileThumbnail(livly) })
+
+  const profileModal = (
+    <LivlyProfileModal
+      livly={profile?.livly ?? null}
+      thumbnail={profile?.thumbnail ?? ''}
+      onClose={() => setProfile(null)}
+    />
+  )
 
   if (!started) {
     return (
@@ -102,21 +146,12 @@ function App() {
         <main className="quiz">
           {/* スタート画面は登場アニメーションなしでそのまま表示する（--drop-in を付けない）。
               key はクイズ側と別にし、最初の問題が同じリヴリーでも枠を作り直してアニメーションを再生させる */}
-          <div className="start-stage">
-            {/* タップで紹介モーダルを開く。サムネイルは開くたびにランダムで選び直す */}
-            <SpeechBubble
-              label={`${featured.kind}の紹介を見る`}
-              onClick={() =>
-                setProfile({
-                  livly: featured,
-                  thumbnail: pickProfileThumbnail(featured),
-                })
-              }
-            >
+          <div className="livly-stage">
+            <ProfileBubble livly={featured} onOpen={openProfile}>
               わたしは
               <br />
               どんなリヴリー？
-            </SpeechBubble>
+            </ProfileBubble>
             <div key={`start-${featured.id}`} className="livly-frame">
               <img
                 className="livly-figure"
@@ -127,7 +162,7 @@ function App() {
             </div>
           </div>
 
-          <div className="start-action">
+          <div className="single-action">
             <button
               type="button"
               className="pill-button"
@@ -138,70 +173,96 @@ function App() {
             </button>
           </div>
         </main>
-        <LivlyProfileModal
-          livly={profile?.livly ?? null}
-          thumbnail={profile?.thumbnail ?? ''}
-          onClose={() => setProfile(null)}
-        />
+        {profileModal}
       </Layout>
     )
   }
 
   /**
    * 押したらシルエットを外してカラーで見せ、選択肢のボタン上に正誤のマークを出す。
-   * 少し見せてから次の問題に進む
+   * 少し見せてから結果画面（吹き出しと「つぎの問題にすすむ」）に切り替える
    */
   const answer = (choice: LivlyInfo) => {
     if (selected) return
     setQuiz({ ...quiz, selected: choice })
     setTimeout(() => {
-      setQuiz((current) =>
-        current
-          ? {
-              ...current,
-              question: createQuestion(current.candidates),
-              selected: null,
-            }
-          : current,
-      )
+      setQuiz((current) => current && { ...current, showResult: true })
     }, REVEAL_DURATION)
   }
+
+  const goNext = () =>
+    setQuiz({
+      ...quiz,
+      question: createQuestion(quiz.candidates),
+      round: round + 1,
+      selected: null,
+      showResult: false,
+    })
 
   return (
     <Layout>
       <main className="quiz">
-        {/* key で問題ごとに枠を作り直す。新しい画像の読み込み中に前の問題の画像が残らず、
-            data-shown も消えて登場アニメーションが毎問最初から再生される */}
-        <div
-          key={`question-${question.answer.id}`}
-          className="livly-frame --drop-in"
-        >
-          <img
-            className={`livly-figure ${selected ? '' : '--silhouette'}`}
-            src={question.answer.firstViewImgPath}
-            alt={selected ? question.answer.kind : 'このリヴリーはだれ？'}
-            draggable={false}
-            onLoad={dropIn}
-          />
+        {/* 結果画面に切り替えても枠（と画像）を作り直さないよう、吹き出しの有無に関わらず
+            同じ .livly-stage の中に置く。作り直すと登場アニメーションがもう一度再生されてしまう */}
+        <div className="livly-stage">
+          {showResult && (
+            <ProfileBubble livly={question.answer} onOpen={openProfile}>
+              正解は
+              <br />
+              {/* 長い名前でも 1 行に収まるよう、名前だけ文字を縮められるようにする */}
+              <span
+                className="speech-bubble-name"
+                style={
+                  {
+                    '--name-length': question.answer.kind.length,
+                  } as CSSProperties
+                }
+              >
+                {question.answer.kind}
+              </span>
+              <br />
+              でした。
+            </ProfileBubble>
+          )}
+          {/* key で問題ごとに枠を作り直す。新しい画像の読み込み中に前の問題の画像が残らず、
+              data-shown も消えて登場アニメーションが毎問最初から再生される */}
+          <div key={`question-${round}`} className="livly-frame --drop-in">
+            <img
+              className={`livly-figure ${selected ? '' : '--silhouette'}`}
+              src={question.answer.firstViewImgPath}
+              alt={selected ? question.answer.kind : 'このリヴリーはだれ？'}
+              draggable={false}
+              onLoad={dropIn}
+            />
+          </div>
         </div>
 
-        <ul className="choices">
-          {question.choices.map((choice) => (
-            <li key={choice.id}>
-              <button
-                type="button"
-                className="pill-button"
-                disabled={selected !== null}
-                onClick={() => answer(choice)}
-              >
-                {selected && (
-                  <AnswerMark correct={choice.id === question.answer.id} />
-                )}
-                {choice.kind}
-              </button>
-            </li>
-          ))}
-        </ul>
+        {showResult ? (
+          <div className="single-action">
+            <button type="button" className="pill-button" onClick={goNext}>
+              つぎの問題にすすむ
+              <NextIcon />
+            </button>
+          </div>
+        ) : (
+          <ul className="choices">
+            {question.choices.map((choice) => (
+              <li key={choice.id}>
+                <button
+                  type="button"
+                  className="pill-button"
+                  disabled={selected !== null}
+                  onClick={() => answer(choice)}
+                >
+                  {selected && (
+                    <AnswerMark correct={choice.id === question.answer.id} />
+                  )}
+                  {choice.kind}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
 
         {/* マークは見た目で伝わるが、読み上げでも結果がわかるように知らせる */}
         <p className="visually-hidden" aria-live="polite">
@@ -211,6 +272,7 @@ function App() {
               : `不正解… 正解は「${question.answer.kind}」`)}
         </p>
       </main>
+      {profileModal}
     </Layout>
   )
 }
