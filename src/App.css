@@ -124,6 +124,138 @@
   width: min(560px, 100%);
 }
 
+/* スタート画面の吹き出しとリヴリーをひとまとまりにする（吹き出しの突端をリヴリーに近づける） */
+.start-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+/* リヴリーの問いかけの吹き出し。突端を中心にゆっくり左右に揺らす */
+.speech-bubble {
+  position: relative;
+  width: min(300px, 100%);
+  aspect-ratio: 320 / 224;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  /* 突端の位置（viewBox の (166, 218)）を揺れの中心にする */
+  transform-origin: 51.9% 97.3%;
+  animation: animation-bubble-sway 3s ease-in-out infinite alternate;
+
+  @media (max-width: 480px) {
+    width: min(250px, 100%);
+  }
+
+  &:is(button) {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 4px;
+    border-radius: 16px;
+  }
+}
+
+@keyframes animation-bubble-sway {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .speech-bubble {
+    animation: none;
+  }
+}
+
+.speech-bubble-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+
+  path {
+    fill: var(--bg);
+    stroke: var(--button-bg);
+    stroke-width: 4;
+    stroke-linejoin: round;
+  }
+}
+
+.speech-bubble-badge {
+  fill: var(--button-bg);
+}
+
+.speech-bubble-badge-text {
+  fill: var(--button-text);
+  font-size: 40px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* 文字は楕円の本体（viewBox の中心 (160, 90)）の中央に置く */
+.speech-bubble-text {
+  position: absolute;
+  left: 50%;
+  top: 40.2%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  font-size: clamp(18px, 5.4vw, 26px);
+  font-weight: 900;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* 「次へ進む」アイコン。ボタンの文字は中央のまま、右端に置く */
+.next-icon {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  transform: translateY(-50%);
+
+  circle {
+    fill: var(--button-text);
+  }
+
+  path {
+    fill: none;
+    stroke: var(--button-bg);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @media (max-width: 480px) {
+    right: 14px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* アイコンがあるボタンは、左右の余白をアイコン分そろえて文字を中央に保つ */
+.pill-button:has(.next-icon) {
+  padding-inline: 72px;
+
+  @media (max-width: 480px) {
+    padding-inline: 56px;
+  }
+}
+
 .choices {
   list-style: none;
   margin: 0;
@@ -140,6 +272,7 @@
 
 /* 厚みのある角丸ボタン。選択肢と「クイズをはじめる」で共通 */
 .pill-button {
+  position: relative;
   width: 100%;
   min-height: 72px;
   padding: 12px 24px;
