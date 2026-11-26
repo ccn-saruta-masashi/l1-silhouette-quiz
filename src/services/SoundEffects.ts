@@ -1,7 +1,7 @@
 /**
  * レトロゲーム風の効果音。音声ファイルは使わず、Web Audio API でその場で鳴らす。
  *
- * 昔のゲーム機の音源にならい、パルス波（デューティ比 25% の矩形波）・三角波・ノイズで作る。
+ * 昔のゲーム機の音源にならい、パルス波（デューティ比 25% の矩形波）・三角波・ノイズを中心に作る。
  * 耳ざわりにならないよう、全体の音量を控えめにし、ローパスフィルターで高い倍音を丸め、
  * 音の終わりは短くフェードアウトさせる（ブツッというノイズを防ぐ）。
  */
@@ -15,11 +15,17 @@ interface Engine {
   context: AudioContext
   output: AudioNode
   pulse: PeriodicWave
-  /** ホワイトノイズ（0.1 秒分）。スイッチの「カチッ」など、音程のない音に使う */
+  /**
+   * ホワイトノイズ（2 秒分。長い音はくり返して使う）。スイッチの「カチッ」や
+   * 紙袋の「ガサッ」、歓声のざわめきなど、音程のない音に使う
+   */
   noise: AudioBuffer
 }
 
 let engine: Engine | null = null
+
+/** ノイズの長さ（秒）。短いとくり返しが周期的な「ブーン」という音に聞こえるので、長めに作る */
+const NOISE_DURATION = 2
 
 /**
  * デューティ比 duty の矩形波（パルス波）を作る。
@@ -38,7 +44,7 @@ function createPulseWave(context: AudioContext, duty: number): PeriodicWave {
 function createNoiseBuffer(context: AudioContext): AudioBuffer {
   const buffer = context.createBuffer(
     1,
-    Math.ceil(context.sampleRate * 0.1),
+    Math.ceil(context.sampleRate * NOISE_DURATION),
     context.sampleRate,
   )
   const data = buffer.getChannelData(0)
@@ -74,28 +80,40 @@ function getEngine(): Engine | null {
   return engine
 }
 
-interface Note {
+export interface Note {
   /** 鳴らし始めるまでの時間（秒） */
   at: number
-  /** 周波数（Hz）。noise では、ノイズのうち残す帯域の中心 */
+  /** 周波数（Hz）。noise では、ノイズのうち残す帯域の中心（filter を指定しないとき） */
   frequency: number
   /** 長さ（秒） */
   duration: number
-  /** 音色。pulse は明るく、triangle は柔らかい。noise は音程のない「カチッ」「シャッ」 */
-  wave: 'pulse' | 'triangle' | 'noise'
+  /**
+   * 音色。pulse は明るく、triangle は柔らかく、sine はさらに丸い（チャイムやベル）。
+   * sawtooth はざらついた音（ラッパや声）。noise は音程のない「カチッ」「ガサッ」
+   */
+  wave: 'pulse' | 'triangle' | 'sine' | 'sawtooth' | 'noise'
   /** 音量（0〜1、全体の音量に対する割合） */
   volume: number
   /** 指定すると、鳴っている間にこの周波数まで滑らかに変える */
   slideTo?: number
   /** true なら、鳴った瞬間から急に減衰させる（打つような短い音）。省略時は長さいっぱい鳴らす */
   percussive?: boolean
+  /** 立ち上がりの時間（秒）。長くするとふわっと始まる。percussive では使わない */
+  attack?: number
+  /** 消えるまでの時間（秒）。長くするとゆっくり消える。percussive では使わない */
+  release?: number
+  /** 音程の揺れ。rate は 1 秒あたりの回数、depth は揺れ幅（セント。100 で半音） */
+  vibrato?: { rate: number; depth: number }
+  /** この音だけにかけるフィルター。to を指定すると、鳴っている間にその周波数まで動かす */
+  filter?: { type: BiquadFilterType; frequency: number; q?: number; to?: number }
 }
 
-function play(notes: Note[]) {
+/** 音を並べて鳴らす。delay（秒）を指定すると、全体をその分遅らせる */
+export function play(notes: Note[], delay = 0) {
   const current = getEngine()
   if (!current) return
   const { context, output, pulse, noise } = current
-  const now = context.currentTime + 0.01
+  const now = context.currentTime + 0.01 + delay
 
   for (const note of notes) {
     const start = now + note.at
@@ -108,36 +126,64 @@ function play(notes: Note[]) {
       gain.gain.linearRampToValueAtTime(note.volume, start + 0.001)
       gain.gain.exponentialRampToValueAtTime(0.001, end)
     } else {
-      // 立ち上がりと終わりをごく短くなめらかにして、プツッという音を防ぐ
-      gain.gain.linearRampToValueAtTime(note.volume, start + 0.005)
-      gain.gain.setValueAtTime(note.volume, Math.max(start + 0.005, end - 0.03))
+      // 立ち上がりと終わりをなめらかにして、プツッという音を防ぐ
+      const attack = Math.min(note.attack ?? 0.005, note.duration / 2)
+      const release = Math.min(note.release ?? 0.03, note.duration - attack)
+      gain.gain.linearRampToValueAtTime(note.volume, start + attack)
+      gain.gain.setValueAtTime(note.volume, end - release)
       gain.gain.linearRampToValueAtTime(0, end)
     }
     gain.connect(output)
 
+    // ノイズは filter の指定がなければ、frequency を中心に帯域を残す
+    const filterOptions =
+      note.filter ??
+      (note.wave === 'noise'
+        ? { type: 'bandpass' as const, frequency: note.frequency, q: 1.2 }
+        : undefined)
+    let destination: AudioNode = gain
+    if (filterOptions) {
+      const filter = context.createBiquadFilter()
+      filter.type = filterOptions.type
+      filter.frequency.setValueAtTime(filterOptions.frequency, start)
+      if (filterOptions.to) {
+        filter.frequency.exponentialRampToValueAtTime(filterOptions.to, end)
+      }
+      filter.Q.value = filterOptions.q ?? 1
+      filter.connect(gain)
+      destination = filter
+    }
+
     let source: AudioScheduledSourceNode
     if (note.wave === 'noise') {
-      // ノイズから一部の帯域だけを残し、硬さ（高さ）を決める
       const buffer = context.createBufferSource()
       buffer.buffer = noise
-      const bandpass = context.createBiquadFilter()
-      bandpass.type = 'bandpass'
-      bandpass.frequency.value = note.frequency
-      bandpass.Q.value = 1.2
-      buffer.connect(bandpass).connect(gain)
+      buffer.loop = true
+      buffer.connect(destination)
+      // 毎回ノイズの違う場所から鳴らし、同じ音のくり返しに聞こえないようにする
+      buffer.start(start, Math.random() * NOISE_DURATION)
       source = buffer
     } else {
       const oscillator = context.createOscillator()
       if (note.wave === 'pulse') oscillator.setPeriodicWave(pulse)
-      else oscillator.type = 'triangle'
+      else oscillator.type = note.wave
       oscillator.frequency.setValueAtTime(note.frequency, start)
       if (note.slideTo) {
         oscillator.frequency.exponentialRampToValueAtTime(note.slideTo, end)
       }
-      oscillator.connect(gain)
+      if (note.vibrato) {
+        const lfo = context.createOscillator()
+        lfo.frequency.value = note.vibrato.rate
+        const depth = context.createGain()
+        depth.gain.value = note.vibrato.depth
+        lfo.connect(depth).connect(oscillator.detune)
+        lfo.start(start)
+        lfo.stop(end + 0.01)
+      }
+      oscillator.connect(destination)
+      oscillator.start(start)
       source = oscillator
     }
-    source.start(start)
     source.stop(end + 0.01)
   }
 }
@@ -154,7 +200,7 @@ const SEMITONES_FROM_A: Record<string, number> = {
 }
 
 /** 音名（C4 など）を周波数にする。A4 = 440Hz の平均律 */
-function note(name: string): number {
+export function note(name: string): number {
   const match = /^([A-G])(#?)(\d)$/.exec(name)
   if (!match) throw new Error(`Invalid note: ${name}`)
   const [, letter, sharp, octave] = match
