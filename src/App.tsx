@@ -1,10 +1,12 @@
 import { type ReactNode, type SyntheticEvent, useEffect, useState } from 'react'
+import { LivlyProfileModal } from './components/LivlyProfileModal'
 import { NextIcon } from './components/NextIcon'
 import { SpeechBubble } from './components/SpeechBubble'
 import { fetchData } from './services/PictureBookApi'
 import type { LivlyInfo } from './types/api'
 import {
   createQuestion,
+  pickProfileThumbnail,
   pickRandom,
   type Question,
   toQuizCandidates,
@@ -50,6 +52,11 @@ interface QuizState {
 function App() {
   const [quiz, setQuiz] = useState<QuizState | null>(null)
   const [error, setError] = useState<Error | null>(null)
+  /** 紹介モーダルに出しているリヴリーとサムネイル。null の間は閉じている */
+  const [profile, setProfile] = useState<{
+    livly: LivlyInfo
+    thumbnail: string
+  } | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -89,8 +96,16 @@ function App() {
           {/* スタート画面は登場アニメーションなしでそのまま表示する（--drop-in を付けない）。
               key はクイズ側と別にし、最初の問題が同じリヴリーでも枠を作り直してアニメーションを再生させる */}
           <div className="start-stage">
-            {/* タップでモーダルを開く処理は、モーダルを作るときに onClick で渡す */}
-            <SpeechBubble>
+            {/* タップで紹介モーダルを開く。サムネイルは開くたびにランダムで選び直す */}
+            <SpeechBubble
+              label={`${featured.kind}の紹介を見る`}
+              onClick={() =>
+                setProfile({
+                  livly: featured,
+                  thumbnail: pickProfileThumbnail(featured),
+                })
+              }
+            >
               わたしは
               <br />
               どんなリヴリー？
@@ -116,6 +131,11 @@ function App() {
             </button>
           </div>
         </main>
+        <LivlyProfileModal
+          livly={profile?.livly ?? null}
+          thumbnail={profile?.thumbnail ?? ''}
+          onClose={() => setProfile(null)}
+        />
       </Layout>
     )
   }
