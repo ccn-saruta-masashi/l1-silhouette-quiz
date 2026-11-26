@@ -3,6 +3,8 @@
   --text: rgb(104, 75, 9);
   --button-bg: rgb(200, 166, 94);
   --button-bg-hover: rgb(184, 150, 78);
+  /* ボタンの厚み（下側の影）の色。ボタン背景より濃い茶 */
+  --button-edge: rgb(150, 116, 44);
   --button-text: #fff;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
