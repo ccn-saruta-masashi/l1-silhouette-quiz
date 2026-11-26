@@ -66,10 +66,26 @@
   font-size: 28px;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: background-color 0.15s;
+  /* ぼかしのない影で下側に厚みを付け、フラットな立体感を出す */
+  --edge: 6px;
+  box-shadow: 0 var(--edge) 0 var(--button-edge);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.15s,
+    transform 0.06s,
+    box-shadow 0.06s;
 
-  &:hover {
-    background: var(--button-bg-hover);
+  /* タッチ端末でホバー色が残らないよう、ホバーできる端末だけに適用する */
+  @media (hover: hover) {
+    &:hover {
+      background: var(--button-bg-hover);
+    }
+  }
+
+  /* 押している間は厚みの分だけ沈め、影を消して「押した」感を出す */
+  &:active {
+    transform: translateY(var(--edge));
+    box-shadow: 0 0 0 var(--button-edge);
   }
 
   &:focus-visible {
@@ -78,6 +94,7 @@
   }
 
   @media (max-width: 480px) {
+    --edge: 5px;
     min-height: 60px;
     font-size: 20px;
   }
