@@ -7,9 +7,10 @@
   --button-edge: rgb(150, 116, 44);
   --button-text: #fff;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Noto Sans JP は index.html で Google Fonts から読み込む。読み込み前や失敗時はシステムフォント */
+  --sans: 'Noto Sans JP', system-ui, 'Segoe UI', Roboto, sans-serif;
 
-  font: 16px/1.5 var(--sans);
+  font: 600 16px/1.5 var(--sans);
   /* ダークモードでも白背景のまま表示する */
   color-scheme: light;
   color: var(--text);
