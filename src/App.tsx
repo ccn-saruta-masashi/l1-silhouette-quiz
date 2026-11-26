@@ -1,4 +1,5 @@
 import { type ReactNode, type SyntheticEvent, useEffect, useState } from 'react'
+import { AnswerMark } from './components/AnswerMark'
 import { LivlyProfileModal } from './components/LivlyProfileModal'
 import { NextIcon } from './components/NextIcon'
 import { SpeechBubble } from './components/SpeechBubble'
@@ -51,8 +52,8 @@ interface QuizState {
   selected: LivlyInfo | null
 }
 
-/** 選択肢を押してから結果を出すまで、カラーの姿を見せる時間（ms） */
-const REVEAL_DURATION = 1200
+/** 選択肢を押してから次の問題に進むまで、カラーの姿と正誤のマークを見せる時間（ms） */
+const REVEAL_DURATION = 2000
 
 function App() {
   const [quiz, setQuiz] = useState<QuizState | null>(null)
@@ -147,18 +148,13 @@ function App() {
   }
 
   /**
-   * 押したらまずシルエットを外してカラーで見せ、少し待ってから結果を出して次の問題に進む。
-   * すぐ alert を出すと、描画の前に止まってカラーの姿が見えないため
+   * 押したらシルエットを外してカラーで見せ、選択肢のボタン上に正誤のマークを出す。
+   * 少し見せてから次の問題に進む
    */
   const answer = (choice: LivlyInfo) => {
     if (selected) return
     setQuiz({ ...quiz, selected: choice })
     setTimeout(() => {
-      alert(
-        choice.id === question.answer.id
-          ? '正解！'
-          : `不正解… 正解は「${question.answer.kind}」`,
-      )
       setQuiz((current) =>
         current
           ? {
@@ -198,11 +194,22 @@ function App() {
                 disabled={selected !== null}
                 onClick={() => answer(choice)}
               >
+                {selected && (
+                  <AnswerMark correct={choice.id === question.answer.id} />
+                )}
                 {choice.kind}
               </button>
             </li>
           ))}
         </ul>
+
+        {/* マークは見た目で伝わるが、読み上げでも結果がわかるように知らせる */}
+        <p className="visually-hidden" aria-live="polite">
+          {selected &&
+            (selected.id === question.answer.id
+              ? '正解！'
+              : `不正解… 正解は「${question.answer.kind}」`)}
+        </p>
       </main>
     </Layout>
   )
