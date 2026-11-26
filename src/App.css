@@ -82,9 +82,16 @@
   object-position: center bottom;
   user-select: none;
 
-  /* クイズの出題: 画像を真っ黒にしてシルエットにする（スタート画面はカラーのまま） */
+  /* 選択肢を押してシルエットを外すとき、黒からカラーへふわっと切り替える */
+  transition: filter 0.6s ease-out;
+
+  /* クイズの出題: 画像を真っ黒にしてシルエットにする（スタート画面と、回答後はカラー） */
   &.--silhouette {
     filter: brightness(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 }
 
@@ -309,6 +316,11 @@
   &:focus-visible {
     outline: 2px solid var(--text);
     outline-offset: 3px;
+  }
+
+  /* 回答後、次の問題に進むまでは押せない。見た目は変えず、ポインタだけ戻す */
+  &:disabled {
+    cursor: default;
   }
 
   @media (max-width: 480px) {
