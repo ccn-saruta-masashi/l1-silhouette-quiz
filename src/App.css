@@ -1,7 +1,48 @@
-.quiz {
+/* ヘッダーを上に置き、残りの高さの中でクイズを上下中央に置く */
+.page {
   min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-header {
+  padding: 40px 16px 0;
+  text-align: center;
+
+  @media (max-width: 480px) {
+    padding-top: 24px;
+  }
+}
+
+.site-title {
+  margin: 0;
+  font-size: clamp(24px, 6.4vw, 40px);
+  font-weight: 900;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+}
+
+/* 見出しと説明文の間に、ボタンと同じ色の短い線を入れて区切る */
+.site-lead {
+  margin-top: 12px;
+  font-size: clamp(13px, 3.6vw, 16px);
+  letter-spacing: 0.04em;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 3px;
+    margin: 0 auto 12px;
+    border-radius: 9999px;
+    background: var(--button-bg);
+  }
+}
+
+.quiz {
+  flex: 1;
   box-sizing: border-box;
-  padding: 48px 16px;
+  padding: 40px 16px 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,8 +50,8 @@
   gap: 48px;
 
   @media (max-width: 480px) {
-    padding: 32px 16px;
-    gap: 32px;
+    padding: 24px 16px 32px;
+    gap: 28px;
   }
 }
 
