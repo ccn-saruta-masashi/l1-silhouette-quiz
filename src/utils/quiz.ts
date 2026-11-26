@@ -3,6 +3,9 @@ import type { LivlyInfo } from '../types/api'
 /** 選択肢の数（正解 1 + 不正解） */
 const CHOICE_COUNT = 3
 
+/** 1 回のクイズの問題数 */
+export const QUESTION_COUNT = 10
+
 /**
  * カラー違いの名前の末尾。「ピグミー P-1」「トビネ Pα-1」「マウンテンピグミーP-2」など。
  * シルエットにすると基本形と見分けがつかないため、出題・選択肢から除く。
@@ -49,14 +52,22 @@ export function pickRandom(candidates: LivlyInfo[]): LivlyInfo {
 /**
  * 候補からランダムに 1 問作る。candidates は toQuizCandidates 済みで、
  * 名前が重複しない前提（不正解の選択肢が正解と同名にならないようにするため）。
+ * askedIds に入っているリヴリーは正解にしない（1 回のクイズで同じリヴリーを出題しないため）。
+ * 不正解の選択肢には出題済みのリヴリーも使う。
  */
-export function createQuestion(candidates: LivlyInfo[]): Question {
-  if (candidates.length < CHOICE_COUNT) {
+export function createQuestion(
+  candidates: LivlyInfo[],
+  askedIds: ReadonlySet<string> = new Set(),
+): Question {
+  const answerPool = candidates.filter((livly) => !askedIds.has(livly.id))
+  if (candidates.length < CHOICE_COUNT || answerPool.length === 0) {
     throw new Error('Not enough livlys to create a question')
   }
-  const choices = shuffle(candidates).slice(0, CHOICE_COUNT)
-  const answer = choices[Math.floor(Math.random() * CHOICE_COUNT)]
-  return { answer, choices }
+  const answer = pickRandom(answerPool)
+  const others = shuffle(
+    candidates.filter((livly) => livly.id !== answer.id),
+  ).slice(0, CHOICE_COUNT - 1)
+  return { answer, choices: shuffle([answer, ...others]) }
 }
 
 /** 紹介モーダルのサムネイルに使うモーション（図鑑データの motions[].label） */

@@ -557,3 +557,283 @@
     font-size: 24px;
   }
 }
+
+/* クイズの進み具合（「Q.3 / 10」・正解数のバッジ・問題ごとのドット） */
+.quiz-progress {
+  display: grid;
+  gap: 14px;
+  width: min(560px, 100%);
+  /* ヘッダーに置くので中央に寄せる。文字は左右に振り分ける */
+  margin: 0 auto;
+  text-align: left;
+
+  @media (max-width: 480px) {
+    gap: 10px;
+  }
+}
+
+.quiz-progress-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* 「Q.3 / 10」。今の番号だけ大きくして、数字で現在地を見せる */
+.quiz-progress-count {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.quiz-progress-q {
+  color: var(--button-bg);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+}
+
+.quiz-progress-current {
+  font-size: 48px;
+  letter-spacing: -0.02em;
+
+  @media (max-width: 480px) {
+    font-size: 38px;
+  }
+}
+
+.quiz-progress-total {
+  margin-left: 2px;
+  color: var(--button-bg);
+  font-size: 20px;
+
+  @media (max-width: 480px) {
+    font-size: 17px;
+  }
+}
+
+/* 正解数のバッジ。正誤マークと同じ緑の「○」を添える */
+.quiz-progress-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  padding: 10px 28px 10px 21px;
+  border-radius: 9999px;
+  background: rgb(200 166 94 / 0.16);
+  font-size: 27px;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  /* 右端に置くので、拡大するときは左へ広げて画面からはみ出さないようにする */
+  transform-origin: right center;
+
+  /* 正解して数が増えたとき、大きく飛び出してから弾んで元の大きさに戻る */
+  &.--bump {
+    animation: animation-score-bump 0.7s cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+}
+
+@keyframes animation-score-bump {
+  0% {
+    /* バッジ自体が大きいので、スマホ幅でも画面の左端からはみ出しすぎない大きさにする */
+    scale: 1.8;
+    background-color: rgb(0 155 38 / 0.25);
+  }
+  45% {
+    scale: 0.88;
+  }
+  65% {
+    scale: 1.1;
+  }
+  82% {
+    scale: 0.97;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+.quiz-progress-score-mark {
+  width: 33px;
+  height: 33px;
+
+  circle {
+    fill: none;
+    stroke: var(--mark-correct);
+    stroke-width: 3;
+  }
+}
+
+.quiz-progress-score-value {
+  display: inline-block;
+  min-width: 1ch;
+  margin-left: 3px;
+  font-size: 44px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* 問題ごとのドット。後ろに細い線を引いて、1 本の道のりに見せる */
+.quiz-progress-dots {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0 6px;
+  list-style: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 50% 6px auto;
+    height: 2px;
+    translate: 0 -50%;
+    border-radius: 9999px;
+    background: rgb(200 166 94 / 0.3);
+  }
+}
+
+.quiz-progress-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--dot-color);
+  transition:
+    background-color 0.3s,
+    scale 0.3s;
+
+  &.--upcoming {
+    --dot-color: rgb(221 202 160);
+  }
+
+  &.--correct {
+    --dot-color: var(--mark-correct);
+  }
+
+  &.--incorrect {
+    --dot-color: var(--mark-incorrect);
+  }
+
+  /* 今の問題: 金の輪で囲み、少し大きくする。まだ答えていなければ中を金で塗る */
+  &.--current {
+    scale: 1.3;
+    box-shadow:
+      0 0 0 3px var(--bg),
+      0 0 0 5px var(--button-bg);
+
+    &.--upcoming {
+      --dot-color: var(--button-bg);
+    }
+
+    /* 答えたとき、正誤の色で大きく飛び出してから、弾んで今の大きさに戻る */
+    &.--correct,
+    &.--incorrect {
+      animation: animation-dot-answered 0.7s cubic-bezier(0.2, 0.8, 0.3, 1);
+    }
+  }
+
+  @media (max-width: 480px) {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@keyframes animation-dot-answered {
+  0% {
+    scale: 3.2;
+  }
+  45% {
+    scale: 1.05;
+  }
+  65% {
+    scale: 1.55;
+  }
+  82% {
+    scale: 1.25;
+  }
+  100% {
+    scale: 1.3;
+  }
+}
+
+/* 不正解のとき、画面全体を左右に大きく揺らす */
+.page.--shake {
+  animation: animation-page-shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes animation-page-shake {
+  0%,
+  100% {
+    translate: 0;
+  }
+  10%,
+  50% {
+    translate: -14px;
+  }
+  30%,
+  70% {
+    translate: 14px;
+  }
+  85% {
+    translate: -6px;
+  }
+  93% {
+    translate: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quiz-progress-score.--bump,
+  .quiz-progress-dot.--current,
+  .page.--shake {
+    animation: none;
+  }
+
+  .quiz-progress-dot {
+    transition: none;
+  }
+}
+
+/* 仮の終了画面（きちんとした結果画面は別 Issue で作る） */
+.quiz-finish {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(560px, 100%);
+  text-align: center;
+
+  /* 正解数は大きく見せるので、進み具合の見出し（バッジ）は出さずドットだけにする */
+  .quiz-progress {
+    margin: 24px 0 0;
+  }
+
+  .quiz-progress-head {
+    display: none;
+  }
+}
+
+.quiz-finish-lead {
+  font-size: 22px;
+  letter-spacing: 0.08em;
+}
+
+.quiz-finish-score {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
+
+.quiz-finish-number {
+  margin-right: 6px;
+  color: var(--button-bg);
+  font-size: 96px;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}

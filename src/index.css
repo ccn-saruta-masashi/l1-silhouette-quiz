@@ -34,6 +34,8 @@
 body {
   margin: 0;
   background: var(--bg);
+  /* 不正解で画面を揺らしたときに、横スクロールが出ないようにする */
+  overflow-x: clip;
 }
 
 p {
