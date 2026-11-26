@@ -52,11 +52,14 @@ function Layout({
   children,
   header,
   shake = false,
+  showLead = true,
 }: {
   children: ReactNode
   header?: ReactNode
   /** true にすると画面を揺らす（不正解のとき） */
   shake?: boolean
+  /** false にすると説明文（「あなたは何体 当てられるかな？」）を出さない（結果画面） */
+  showLead?: boolean
 }) {
   return (
     <div className={`page ${shake ? '--shake' : ''}`}>
@@ -69,7 +72,9 @@ function Layout({
         ) : (
           <>
             <h1 className="site-title">リヴリーシルエットクイズ</h1>
-            <p className="site-lead">あなたは何体 当てられるかな？</p>
+            {showLead && (
+              <p className="site-lead">あなたは何体 当てられるかな？</p>
+            )}
           </>
         )}
       </header>
@@ -339,8 +344,9 @@ function App() {
     const correctCount = results.filter(Boolean).length
     const rank = rankFor(correctCount)
     return (
-      <Layout>
-        <main className="quiz">
+      <Layout showLead={false}>
+        {/* 結果画面は縦に長いので、上下中央ではなくヘッダーのすぐ下から並べる */}
+        <main className="quiz --top">
           <section className="quiz-finish">
             <p className="quiz-finish-lead">{QUESTION_COUNT}問中</p>
             <p className="quiz-finish-score">
