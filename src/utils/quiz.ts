@@ -38,6 +38,14 @@ function shuffle<T>(items: readonly T[]): T[] {
   return result
 }
 
+/** 候補からランダムに 1 体選ぶ（スタート画面の表示用）。 */
+export function pickRandom(candidates: LivlyInfo[]): LivlyInfo {
+  if (candidates.length === 0) {
+    throw new Error('No livly to pick')
+  }
+  return candidates[Math.floor(Math.random() * candidates.length)]
+}
+
 /**
  * 候補からランダムに 1 問作る。candidates は toQuizCandidates 済みで、
  * 名前が重複しない前提（不正解の選択肢が正解と同名にならないようにするため）。

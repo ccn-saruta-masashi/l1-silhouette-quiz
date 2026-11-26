@@ -1,11 +1,16 @@
 import { type ReactNode, type SyntheticEvent, useEffect, useState } from 'react'
 import { fetchData } from './services/PictureBookApi'
 import type { LivlyInfo } from './types/api'
-import { createQuestion, type Question, toQuizCandidates } from './utils/quiz'
+import {
+  createQuestion,
+  pickRandom,
+  type Question,
+  toQuizCandidates,
+} from './utils/quiz'
 import './App.css'
 
 /**
- * 画像の読み込みが終わったら、枠 (.silhouette-frame) に data-shown を付けて CSS の落下
+ * 画像の読み込みが終わったら、枠 (.livly-frame) に data-shown を付けて CSS の落下
  * アニメーションを始める（livly-ratio の dropInOnReveal をクイズ用にしたもの）。
  * クイズの画像は 1 体で最初から画面内にあるので、画面に入ったときではなく読み込み完了で始める。
  * 読み込み前に始めると、落ちてくる途中が空のまま終わってしまうため
@@ -33,6 +38,10 @@ function Layout({ children }: { children: ReactNode }) {
 
 interface QuizState {
   candidates: LivlyInfo[]
+  /** スタート画面にカラーで表示するリヴリー */
+  featured: LivlyInfo
+  /** 「クイズをはじめる」を押したか。false の間はスタート画面を出す */
+  started: boolean
   question: Question
 }
 
@@ -44,7 +53,12 @@ function App() {
     fetchData()
       .then((data) => {
         const candidates = toQuizCandidates(data.mono)
-        setQuiz({ candidates, question: createQuestion(candidates) })
+        setQuiz({
+          candidates,
+          featured: pickRandom(candidates),
+          started: false,
+          question: createQuestion(candidates),
+        })
       })
       .catch(setError)
   }, [])
@@ -64,7 +78,36 @@ function App() {
     )
   }
 
-  const { candidates, question } = quiz
+  const { candidates, featured, started, question } = quiz
+
+  if (!started) {
+    return (
+      <Layout>
+        <main className="quiz">
+          {/* スタート画面は登場アニメーションなしでそのまま表示する（--drop-in を付けない）。
+              key はクイズ側と別にし、最初の問題が同じリヴリーでも枠を作り直してアニメーションを再生させる */}
+          <div key={`start-${featured.id}`} className="livly-frame">
+            <img
+              className="livly-figure"
+              src={featured.firstViewImgPath}
+              alt={featured.kind}
+              draggable={false}
+            />
+          </div>
+
+          <div className="start-action">
+            <button
+              type="button"
+              className="pill-button"
+              onClick={() => setQuiz({ ...quiz, started: true })}
+            >
+              クイズをはじめる
+            </button>
+          </div>
+        </main>
+      </Layout>
+    )
+  }
 
   const answer = (choice: LivlyInfo) => {
     alert(
@@ -72,7 +115,7 @@ function App() {
         ? '正解！'
         : `不正解… 正解は「${question.answer.kind}」`,
     )
-    setQuiz({ candidates, question: createQuestion(candidates) })
+    setQuiz({ ...quiz, question: createQuestion(candidates) })
   }
 
   return (
@@ -80,9 +123,12 @@ function App() {
       <main className="quiz">
         {/* key で問題ごとに枠を作り直す。新しい画像の読み込み中に前の問題の画像が残らず、
             data-shown も消えて登場アニメーションが毎問最初から再生される */}
-        <div key={question.answer.id} className="silhouette-frame">
+        <div
+          key={`question-${question.answer.id}`}
+          className="livly-frame --drop-in"
+        >
           <img
-            className="silhouette"
+            className="livly-figure --silhouette"
             src={question.answer.firstViewImgPath}
             alt="このリヴリーはだれ？"
             draggable={false}
@@ -95,7 +141,7 @@ function App() {
             <li key={choice.id}>
               <button
                 type="button"
-                className="choice"
+                className="pill-button"
                 onClick={() => answer(choice)}
               >
                 {choice.kind}

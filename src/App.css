@@ -60,7 +60,7 @@
   text-align: center;
 }
 
-.silhouette-frame {
+.livly-frame {
   position: relative;
   width: min(320px, 100%);
   aspect-ratio: 1;
@@ -70,7 +70,7 @@
   }
 }
 
-.silhouette {
+.livly-figure {
   /* 絶対配置にして、画像の元サイズで枠が広がらないようにする。
      登場アニメーションで枠の外（上）から降りてくるので、枠で切り抜かない */
   position: absolute;
@@ -80,20 +80,23 @@
   object-fit: contain;
   /* 足元を枠の下端に揃え、着地点と伸び縮みの基準を足元にする */
   object-position: center bottom;
-  /* 画像を真っ黒にしてシルエットにする */
-  filter: brightness(0);
   user-select: none;
+
+  /* クイズの出題: 画像を真っ黒にしてシルエットにする（スタート画面はカラーのまま） */
+  &.--silhouette {
+    filter: brightness(0);
+  }
 }
 
-/* 登場アニメーション（livly-ratio と同じ動き）: 画像の読み込みが終わるまでは隠し、
+/* 登場アニメーション（livly-ratio と同じ動き。--drop-in を付けた枠＝クイズの出題だけ）: 画像の読み込みが終わるまでは隠し、
    終わったら (data-shown) 縦長のまま上から落ちてきて、通常の縦横比で着地する。
    足元から画面上端までの距離 (--drop-distance) は App.tsx で付ける。開始位置は自身の高さの
    9 倍と --drop-distance の遠いほうにし、必ず画面の上端の外から落ちてくるようにする */
-.silhouette-frame:not([data-shown]) .silhouette {
+.livly-frame.--drop-in:not([data-shown]) .livly-figure {
   visibility: hidden;
 }
 
-.silhouette-frame[data-shown] .silhouette {
+.livly-frame.--drop-in[data-shown] .livly-figure {
   transform-origin: bottom;
   animation: animation-livly-show 0.5s linear both;
 }
@@ -111,9 +114,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .silhouette-frame[data-shown] .silhouette {
+  .livly-frame.--drop-in[data-shown] .livly-figure {
     animation: none;
   }
+}
+
+/* スタート画面の「クイズをはじめる」ボタンの枠。選択肢と同じ幅にする */
+.start-action {
+  width: min(560px, 100%);
 }
 
 .choices {
@@ -130,7 +138,8 @@
   }
 }
 
-.choice {
+/* 厚みのある角丸ボタン。選択肢と「クイズをはじめる」で共通 */
+.pill-button {
   width: 100%;
   min-height: 72px;
   padding: 12px 24px;
