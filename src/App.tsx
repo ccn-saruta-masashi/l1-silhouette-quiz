@@ -11,6 +11,11 @@ import { NextIcon } from './components/NextIcon'
 import { QuizProgress } from './components/QuizProgress'
 import { SpeechBubble } from './components/SpeechBubble'
 import { fetchData } from './services/PictureBookApi'
+import {
+  playCorrectSound,
+  playIncorrectSound,
+  playTapSound,
+} from './services/SoundEffects'
 import type { LivlyInfo } from './types/api'
 import {
   createQuestion,
@@ -209,7 +214,10 @@ function App() {
             <button
               type="button"
               className="pill-button"
-              onClick={() => setQuiz({ ...quiz, started: true })}
+              onClick={() => {
+                playTapSound()
+                setQuiz({ ...quiz, started: true })
+              }}
             >
               クイズをはじめる
               <NextIcon />
@@ -227,6 +235,9 @@ function App() {
    */
   const answer = (choice: LivlyInfo) => {
     if (selected) return
+    // 選択肢ではボタンの音は鳴らさず、正解・不正解の音だけにする（重なってうるさくならないように）
+    if (choice.id === question.answer.id) playCorrectSound()
+    else playIncorrectSound()
     setQuiz({
       ...quiz,
       selected: choice,
@@ -247,6 +258,7 @@ function App() {
 
   /** 次の問題へ進む。出題済みのリヴリーは正解にしない。最後の問題のあとは終了画面へ */
   const goNext = () => {
+    playTapSound()
     if (isLastRound) {
       setQuiz({ ...quiz, finished: true })
       return
@@ -264,7 +276,8 @@ function App() {
   }
 
   /** 1 問目・正解 0 からやり直す */
-  const restart = () =>
+  const restart = () => {
+    playTapSound()
     setQuiz({
       ...quiz,
       question: createQuestion(quiz.candidates),
@@ -274,6 +287,7 @@ function App() {
       selected: null,
       showResult: false,
     })
+  }
 
   // 仮の終了画面。きちんとした結果画面は別 Issue で作る
   if (finished) {
