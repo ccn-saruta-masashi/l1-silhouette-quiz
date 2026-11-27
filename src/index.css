@@ -44,6 +44,12 @@ p {
   margin: 0;
 }
 
+/* フォーカスの枠線は、Tab キーで移動したとき（<html data-keyboard>。utils/focusModality.ts で付ける）
+   だけ出す。クリック・タップ・Esc のあとにブラウザの判断で出る枠線は消す */
+:root:not([data-keyboard]) :focus-visible {
+  outline: none;
+}
+
 /* 画面には出さず、読み上げにだけ伝える */
 .visually-hidden {
   position: absolute;
