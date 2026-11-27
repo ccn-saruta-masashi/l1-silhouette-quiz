@@ -429,8 +429,9 @@
   /* <dialog> 自体は透明な枠なので、フォーカスが来ても枠線は出さない（Safari で Tab を押したときなど） */
   outline: none;
 
+  /* 後ろの画面は白で覆う */
   &::backdrop {
-    background: rgb(0 0 0 / 0.6);
+    background: var(--bg);
   }
 
   /* 開いたときに、カードと背景を透明からふわっと表示する */
@@ -504,13 +505,19 @@
   }
 }
 
+/* リヴリー画像の横幅は、メイン画面のリヴリー（.livly-frame）より 20px 大きくする。
+   モーション画像は余白が多く、同じ横幅だとキャラクターが小さく見えるため */
 .profile-thumbnail {
   display: block;
-  width: min(360px, 100%);
+  width: min(340px, 100%);
   aspect-ratio: 1;
   margin: 0 auto 8px;
   object-fit: contain;
   user-select: none;
+
+  @media (max-width: 480px) {
+    width: min(260px, 100%);
+  }
 }
 
 /* 項目名と値の 2 列。項目名の幅は一番長い「大きさ」に合わせる */
