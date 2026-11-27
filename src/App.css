@@ -167,6 +167,9 @@
   &:is(button) {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    /* 続けて押したときに、文字（リヴリー名など）が選択されてハイライトされないようにする */
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   &:focus-visible {
@@ -375,6 +378,9 @@
   font-size: 28px;
   letter-spacing: 0.08em;
   cursor: pointer;
+  /* 続けて押したときに、文字が選択されてハイライトされないようにする */
+  user-select: none;
+  -webkit-user-select: none;
   /* ぼかしのない影で下側に厚みを付け、フラットな立体感を出す */
   --edge: 6px;
   box-shadow: 0 var(--edge) 0 var(--button-edge);
