@@ -16,6 +16,7 @@ import { playRankSound } from './services/RankSounds'
 import {
   playCorrectSound,
   playIncorrectSound,
+  playPoinSound,
   playTapSound,
 } from './services/SoundEffects'
 import type { LivlyInfo } from './types/api'
@@ -193,9 +194,11 @@ function App() {
     correct ? [] : [index],
   )
 
-  /** 紹介モーダルを開く。サムネイルは開くたびにランダムで選び直す */
-  const openProfile = (livly: LivlyInfo) =>
+  /** 紹介モーダルを開く（「ぽいん」と鳴らす）。サムネイルは開くたびにランダムで選び直す */
+  const openProfile = (livly: LivlyInfo) => {
+    playPoinSound()
     setProfile({ livly, thumbnail: pickProfileThumbnail(livly) })
+  }
 
   const profileModal = (
     <LivlyProfileModal

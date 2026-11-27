@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
 } from 'react'
+import { playPoinSound } from '../services/SoundEffects'
 import type { LivlyInfo } from '../types/api'
 
 interface LivlyProfileModalProps {
@@ -39,13 +40,15 @@ export function LivlyProfileModal({
   }, [livly])
 
   /**
-   * フェードアウトしてから閉じる。消えている途中にもう一度呼ばれても二重に処理しない。
+   * 「ぽいん」と鳴らし、フェードアウトしてから閉じる。消えている途中にもう一度呼ばれても二重に処理しない。
    * 視差効果を減らす設定などでアニメーションがなければ、すぐ閉じる
    */
   const requestClose = async () => {
     const dialog = dialogRef.current
     if (!dialog?.open || 'closing' in dialog.dataset) return
     dialog.dataset.closing = ''
+    // 開くときと同じ「ぽいん」を鳴らす（二重に呼ばれても上で止まるので 1 回だけ）
+    playPoinSound()
     // ::backdrop の分も含めて、フェードアウトのアニメーションが終わるのを待つ
     // （ボタンのホバー色の変化などは待たない）
     const animations = dialog
