@@ -148,7 +148,7 @@ interface QuizState {
   showResult: boolean
 }
 
-/** スタート画面の「図鑑で勉強する」のリンク先（公式のリヴリー図鑑） */
+/** スタート画面の「図鑑でリヴリーを学ぶ」のリンク先（公式のリヴリー図鑑） */
 const PICTURE_BOOK_URL = 'https://www.livly.com/picturebook/'
 
 /** 選択肢を押してから結果画面に切り替えるまで、正誤のマークを見せる時間（ms） */
@@ -274,7 +274,7 @@ function App() {
               rel="noopener noreferrer"
               onClick={playTapSound}
             >
-              図鑑で勉強する
+              図鑑でリヴリーを学ぶ
               <span className="visually-hidden">（新しいタブで開きます）</span>
               <NextIcon />
             </a>
