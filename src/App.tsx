@@ -10,6 +10,7 @@ import { LivlyProfileModal } from './components/LivlyProfileModal'
 import { NextIcon } from './components/NextIcon'
 import { QuizProgress } from './components/QuizProgress'
 import { SpeechBubble } from './components/SpeechBubble'
+import { IntroTitle, TypewriterLead } from './components/TitleIntro'
 import { celebrate, stopConfetti } from './services/Confetti'
 import { fetchData } from './services/PictureBookApi'
 import { playRankSound } from './services/RankSounds'
@@ -56,13 +57,19 @@ function Layout({
   header,
   shake = false,
   showLead = true,
+  intro = false,
 }: {
   children: ReactNode
   header?: ReactNode
   /** true にすると画面を揺らす（不正解のとき） */
   shake?: boolean
-  /** false にすると説明文（「めざせ研究員！ あなたは何体 当てられるかな？」）を出さない（結果画面） */
+  /** false にすると説明文（「めざせ研究員！ あなたは何体 当てられますか？」）を出さない（結果画面） */
   showLead?: boolean
+  /**
+   * true にするとタイトルを派手に登場させ、説明文をタイプライター方式で表示する（ページを開いたとき）。
+   * 読み込み中とスタート画面の両方で true にし、同じ要素のまま演出を続けさせる
+   */
+  intro?: boolean
 }) {
   return (
     <div className={`page ${shake ? '--shake' : ''}`}>
@@ -74,14 +81,21 @@ function Layout({
           </>
         ) : (
           <>
-            <h1 className="site-title">リヴリーシルエットクイズ</h1>
-            {showLead && (
-              <p className="site-lead">
-                めざせ研究員！
-                <br />
-                あなたは何体 当てられるかな？
-              </p>
+            {intro ? (
+              <IntroTitle />
+            ) : (
+              <h1 className="site-title">リヴリーシルエットクイズ</h1>
             )}
+            {showLead &&
+              (intro ? (
+                <TypewriterLead />
+              ) : (
+                <p className="site-lead">
+                  めざせ研究員！
+                  <br />
+                  あなたは何体 当てられますか？
+                </p>
+              ))}
           </>
         )}
       </header>
@@ -178,7 +192,7 @@ function App() {
   }
   if (!quiz) {
     return (
-      <Layout>
+      <Layout intro>
         <p className="status">読み込み中…</p>
       </Layout>
     )
@@ -217,7 +231,7 @@ function App() {
 
   if (!started) {
     return (
-      <Layout>
+      <Layout intro>
         <main className="quiz">
           {/* スタート画面は登場アニメーションなしでそのまま表示する（--drop-in を付けない）。
               key はクイズ側と別にし、最初の問題が同じリヴリーでも枠を作り直してアニメーションを再生させる */}

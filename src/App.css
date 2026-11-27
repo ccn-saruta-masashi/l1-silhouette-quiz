@@ -22,7 +22,7 @@
   letter-spacing: 0.06em;
 }
 
-/* タイトルの下の説明文（「めざせ研究員！」「あなたは何体 当てられるかな？」の 2 行） */
+/* タイトルの下の説明文（「めざせ研究員！」「あなたは何体 当てられますか？」の 2 行） */
 .site-lead {
   margin-top: 8px;
   font-size: clamp(16px, 4.6vw, 22px);
@@ -955,5 +955,113 @@
   @media (max-width: 480px) {
     font-size: 17px;
     letter-spacing: 0.02em;
+  }
+}
+
+/* スタート画面のタイトルの登場（IntroTitle）。3 語を 1 語ずつ、大きな状態から叩きつけるように
+   登場させ（--word-delay ずつずらす）、そろったら全体を「どーん！」と弾ませて揺らす */
+.site-title.--intro {
+  animation: animation-title-boom 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) 1.05s both;
+}
+
+.site-title-word {
+  display: inline-block;
+  animation: animation-title-slam 0.45s cubic-bezier(0.2, 0.8, 0.3, 1)
+    var(--word-delay, 0s) both;
+}
+
+@keyframes animation-title-slam {
+  0% {
+    opacity: 0;
+    scale: 3;
+    filter: blur(6px);
+  }
+  55% {
+    opacity: 1;
+    scale: 0.88;
+    filter: blur(0);
+  }
+  75% {
+    scale: 1.08;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes animation-title-boom {
+  0% {
+    scale: 1;
+    translate: 0;
+  }
+  15% {
+    scale: 1.18;
+  }
+  30% {
+    translate: -6px 2px;
+  }
+  45% {
+    scale: 0.96;
+    translate: 6px -2px;
+  }
+  60% {
+    translate: -3px 1px;
+  }
+  75% {
+    scale: 1.03;
+    translate: 2px 0;
+  }
+  100% {
+    scale: 1;
+    translate: 0;
+  }
+}
+
+/* タイプライター方式の説明文（TypewriterLead）。まだ打っていない文字も場所は取っておく */
+.site-lead-line {
+  display: block;
+}
+
+.site-lead-char {
+  position: relative;
+
+  &.--hidden {
+    visibility: hidden;
+  }
+}
+
+/* 打っている位置で点滅するカーソル。幅を取らず、文字の右に重ねる */
+.site-lead-caret {
+  position: absolute;
+  top: 12%;
+  right: -3px;
+  width: 2px;
+  height: 76%;
+  background: var(--button-bg);
+  animation: animation-caret-blink 0.8s steps(1) infinite;
+
+  /* まだ 1 文字も打っていない間は、行の先頭に置く */
+  &.--start {
+    position: relative;
+    top: 0.12em;
+    right: auto;
+    display: inline-block;
+    height: 1em;
+    margin-right: -2px;
+  }
+}
+
+@keyframes animation-caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-title.--intro,
+  .site-title-word,
+  .site-lead-caret {
+    animation: none;
   }
 }
