@@ -31,11 +31,18 @@ export function LivlyProfileModal({
   onClose,
 }: LivlyProfileModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
-    if (livly && !dialog.open) dialog.showModal()
+    if (livly && !dialog.open) {
+      dialog.showModal()
+      // ブラウザは開いたときに最初のボタン（「X」）へフォーカスを移し、Safari ではタップで
+      // 開いてもフォーカスの枠線が出てしまう。代わりに枠線を出さないカード本体へ移す。
+      // キーボードの人は Tab で「X」に移れて、そのときは枠線が出る
+      cardRef.current?.focus({ preventScroll: true })
+    }
     if (!livly && dialog.open) dialog.close()
   }, [livly])
 
@@ -98,7 +105,7 @@ export function LivlyProfileModal({
           >
             X
           </button>
-          <div className="profile-card">
+          <div ref={cardRef} className="profile-card" tabIndex={-1}>
             <img
               className="profile-thumbnail"
               src={thumbnail}
