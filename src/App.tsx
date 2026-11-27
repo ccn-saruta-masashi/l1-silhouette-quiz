@@ -58,6 +58,7 @@ function Layout({
   shake = false,
   showLead = true,
   intro = false,
+  onIntroEnd,
 }: {
   children: ReactNode
   header?: ReactNode
@@ -70,6 +71,8 @@ function Layout({
    * 読み込み中とスタート画面の両方で true にし、同じ要素のまま演出を続けさせる
    */
   intro?: boolean
+  /** intro の演出（説明文のタイプライター）が終わったときに呼ぶ */
+  onIntroEnd?: () => void
 }) {
   return (
     <div className={`page ${shake ? '--shake' : ''}`}>
@@ -88,7 +91,7 @@ function Layout({
             )}
             {showLead &&
               (intro ? (
-                <TypewriterLead />
+                <TypewriterLead onDone={onIntroEnd} />
               ) : (
                 <p className="site-lead">
                   めざせ研究員！
@@ -157,6 +160,9 @@ const REVEAL_DURATION = 2000
 function App() {
   const [quiz, setQuiz] = useState<QuizState | null>(null)
   const [error, setError] = useState<Error | null>(null)
+  /** スタート画面のタイトルと説明文の演出が終わったか。終わったらリヴリーと吹き出しを登場させる */
+  const [introDone, setIntroDone] = useState(false)
+  const endIntro = () => setIntroDone(true)
   /** 紹介モーダルに出しているリヴリーとサムネイル。null の間は閉じている */
   const [profile, setProfile] = useState<{
     livly: LivlyInfo
@@ -192,7 +198,7 @@ function App() {
   }
   if (!quiz) {
     return (
-      <Layout intro>
+      <Layout intro onIntroEnd={endIntro}>
         <p className="status">読み込み中…</p>
       </Layout>
     )
@@ -231,11 +237,12 @@ function App() {
 
   if (!started) {
     return (
-      <Layout intro>
+      <Layout intro onIntroEnd={endIntro}>
         <main className="quiz">
           {/* スタート画面は登場アニメーションなしでそのまま表示する（--drop-in を付けない）。
               key はクイズ側と別にし、最初の問題が同じリヴリーでも枠を作り直してアニメーションを再生させる */}
-          <div className="livly-stage">
+          {/* タイトルと説明文の演出が終わるまでは、場所だけ取って隠しておき、終わったら登場させる */}
+          <div className={`livly-stage ${introDone ? '--appear' : '--waiting'}`}>
             <ProfileBubble livly={featured} onOpen={openProfile}>
               わたしは
               <br />
