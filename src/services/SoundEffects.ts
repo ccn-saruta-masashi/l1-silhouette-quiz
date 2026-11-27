@@ -15,6 +15,8 @@ interface Engine {
   context: AudioContext
   output: AudioNode
   pulse: PeriodicWave
+  /** デューティ比 12.5% のパルス波。25% よりさらに細く、鼻にかかったような昔のゲーム機の音 */
+  narrowPulse: PeriodicWave
   /**
    * ホワイトノイズ（2 秒分。長い音はくり返して使う）。スイッチの「カチッ」や
    * 紙袋の「ガサッ」、歓声のざわめきなど、音程のない音に使う
@@ -75,6 +77,7 @@ function getEngine(): Engine | null {
     context,
     output: master,
     pulse: createPulseWave(context, 0.25),
+    narrowPulse: createPulseWave(context, 0.125),
     noise: createNoiseBuffer(context),
   }
   return engine
@@ -91,11 +94,18 @@ export interface Note {
    * 音色。pulse は明るく、triangle は柔らかく、sine はさらに丸い（チャイムやベル）。
    * sawtooth はざらついた音（ラッパや声）。noise は音程のない「カチッ」「ガサッ」
    */
-  wave: 'pulse' | 'triangle' | 'sine' | 'sawtooth' | 'noise'
+  wave: 'pulse' | 'narrowPulse' | 'triangle' | 'sine' | 'sawtooth' | 'noise'
   /** 音量（0〜1、全体の音量に対する割合） */
   volume: number
   /** 指定すると、鳴っている間にこの周波数まで滑らかに変える */
   slideTo?: number
+  /**
+   * 指定すると、frequency の代わりにこの周波数を stepInterval ごとに階段状に切り替える。
+   * 昔のゲーム機は 1/60 秒ごとに音程を書き換えていたので、なめらかでない段差が「らしさ」になる
+   */
+  steps?: number[]
+  /** steps を切り替える間隔（秒）。省略時は 1/60 秒 */
+  stepInterval?: number
   /** true なら、鳴った瞬間から急に減衰させる（打つような短い音）。省略時は長さいっぱい鳴らす */
   percussive?: boolean
   /** 立ち上がりの時間（秒）。長くするとふわっと始まる。percussive では使わない */
@@ -112,7 +122,7 @@ export interface Note {
 export function play(notes: Note[], delay = 0) {
   const current = getEngine()
   if (!current) return
-  const { context, output, pulse, noise } = current
+  const { context, output, pulse, narrowPulse, noise } = current
   const now = context.currentTime + 0.01 + delay
 
   for (const note of notes) {
@@ -166,8 +176,19 @@ export function play(notes: Note[], delay = 0) {
     } else {
       const oscillator = context.createOscillator()
       if (note.wave === 'pulse') oscillator.setPeriodicWave(pulse)
-      else oscillator.type = note.wave
+      else if (note.wave === 'narrowPulse') {
+        oscillator.setPeriodicWave(narrowPulse)
+      } else oscillator.type = note.wave
       oscillator.frequency.setValueAtTime(note.frequency, start)
+      if (note.steps) {
+        const interval = note.stepInterval ?? 1 / 60
+        note.steps.forEach((frequency, index) => {
+          oscillator.frequency.setValueAtTime(
+            frequency,
+            start + index * interval,
+          )
+        })
+      }
       if (note.slideTo) {
         oscillator.frequency.exponentialRampToValueAtTime(note.slideTo, end)
       }
@@ -283,6 +304,66 @@ export function playCorrectSound() {
       volume: 0.18,
     },
   ])
+}
+
+/** 1/60 秒（昔のゲーム機が音程を書き換える 1 コマ） */
+const FRAME = 1 / 60
+
+/**
+ * 「いん」の音程の並び。from から to へ 1 コマずつ上げながら、上下に交互に揺らす。
+ * 揺れ幅は少しずつ小さくして、バネが落ち着くように聞かせる
+ */
+function boingSteps(from: number, to: number, frames: number): number[] {
+  return Array.from({ length: frames }, (_, index) => {
+    const progress = index / (frames - 1)
+    const base = from * (to / from) ** progress
+    const wobble = 0.09 * (1 - progress * 0.7)
+    return base * (index % 2 === 0 ? 1 + wobble : 1 - wobble)
+  })
+}
+
+/**
+ * 紹介モーダルを開くときの「ぽいん」。昔のゲーム機の効果音にならい、音程を 1/60 秒ごとの
+ * 階段状に切り替える。細いパルス波（12.5%）が主で、1 オクターブ下の三角波で厚みを足す。
+ * - 「ぽ」: ド・ミ・ソ・ドと 1 コマずつ駆け上がる
+ * - 「いん」: さらに上がりながら、1 コマごとに上下に揺れて消える（バネの「びよん」）
+ * - 最後に小さなエコーを 1 回重ねる
+ */
+export function playPoinSound() {
+  const po = ['C5', 'E5', 'G5', 'C6'].map(note)
+  const boing = boingSteps(note('E5'), note('E6'), 16)
+  const phrase = (at: number, volume: number): Note[] => [
+    {
+      at,
+      frequency: po[0],
+      steps: po,
+      duration: po.length * FRAME,
+      wave: 'narrowPulse',
+      volume: 0.55 * volume,
+      release: 0.005,
+    },
+    {
+      at: at + po.length * FRAME,
+      frequency: boing[0],
+      steps: boing,
+      duration: boing.length * FRAME,
+      wave: 'narrowPulse',
+      volume: 0.5 * volume,
+      attack: 0.002,
+      release: 0.1,
+    },
+    {
+      at,
+      frequency: po[0] / 2,
+      steps: [...po, ...boing].map((frequency) => frequency / 2),
+      duration: (po.length + boing.length) * FRAME,
+      wave: 'triangle',
+      volume: 0.45 * volume,
+      attack: 0.002,
+      release: 0.1,
+    },
+  ]
+  play([...phrase(0, 1), ...phrase(0.1, 0.25)])
 }
 
 /** 不正解の音。低めの 2 音で下がり、最後は音程を落として「しょんぼり」させる */
