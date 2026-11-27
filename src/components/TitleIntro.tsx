@@ -47,22 +47,27 @@ export function IntroTitle() {
 /**
  * スタート画面の説明文を、タイトルの演出のあとにタイプライター方式で 1 文字ずつ表示する。
  * 文字はまだ見えないうちから場所を取っておき（visibility: hidden）、表示が進んでもレイアウトがずれない。
- * 読み上げには最初から全文（visually-hidden）を伝え、見た目の文字は読み上げから隠す
+ * 読み上げには最初から全文（visually-hidden）を伝え、見た目の文字は読み上げから隠す。
+ * 打ち終わったら onDone を呼ぶ（視差効果を減らす設定では、すぐ呼ぶ）
  */
-export function TypewriterLead() {
+export function TypewriterLead({ onDone }: { onDone?: () => void }) {
   // 視差効果を減らす設定では、最初から全部表示する
   const [shown, setShown] = useState(() =>
     prefersReducedMotion() ? LEAD_LENGTH : 0,
   )
 
   useEffect(() => {
-    if (shown >= LEAD_LENGTH) return
+    if (shown >= LEAD_LENGTH) {
+      // 打ち終わったら知らせる（スタート画面のリヴリーと吹き出しを登場させる合図）
+      onDone?.()
+      return
+    }
     const timer = window.setTimeout(
       () => setShown((count) => count + 1),
       shown === 0 ? TYPE_START : TYPE_INTERVAL,
     )
     return () => window.clearTimeout(timer)
-  }, [shown])
+  }, [shown, onDone])
 
   return (
     <p className="site-lead">
