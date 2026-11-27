@@ -14,19 +14,49 @@
   }
 }
 
+/* タイトルのロゴ（SiteTitle）。幅はボタンなどの中身より 20px 小さくし（PC 540px）、
+   1 段目にロゴ、2 段目に「シルエット」「クイズ」を並べる */
 .site-title {
-  margin: 0;
-  font-size: clamp(24px, 6.4vw, 40px);
-  font-weight: 900;
-  line-height: 1.3;
-  letter-spacing: 0.06em;
+  display: grid;
+  gap: clamp(6px, 2vw, 14px);
+  width: min(540px, calc(100% - 20px));
+  margin: 0 auto;
+}
+
+.site-title-part {
+  display: block;
+  height: auto;
+  user-select: none;
+}
+
+.site-title-logo {
+  width: 100%;
+}
+
+/* 「シルエット」「クイズ」は高さをそろえて横に並べる。各画像の縦横比（幅 / 高さ）で幅を配分する */
+.site-title-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4%;
+}
+
+.site-title-silhouette {
+  flex: 5 1 0; /* 353.27 / 70.66 */
+  min-width: 0;
+}
+
+.site-title-quiz {
+  flex: 2.93 1 0; /* 217.23 / 74.14 */
+  min-width: 0;
 }
 
 /* タイトルの下の説明文（「めざせ研究員！」「あなたは何体 当てられますか？」の 2 行） */
 .site-lead {
-  margin-top: 8px;
-  font-size: clamp(16px, 4.6vw, 22px);
-  line-height: 1.6;
+  /* タイトル（「シルエット クイズ」）から 30px 下に置く。文字は PC で 36px。
+     スマホでは 2 行目が 1 行に収まるよう、画面幅に合わせて小さくする */
+  margin-top: clamp(18px, 6vw, 30px);
+  font-size: clamp(18px, 5.6vw, 36px);
+  line-height: 1.5;
   letter-spacing: 0.04em;
 }
 
@@ -971,14 +1001,13 @@
   }
 }
 
-/* スタート画面のタイトルの登場（IntroTitle）。3 語を 1 語ずつ、大きな状態から叩きつけるように
-   登場させ（--word-delay ずつずらす）、そろったら全体を「どーん！」と弾ませて揺らす */
+/* スタート画面のタイトルの登場（SiteTitle の intro）。ロゴ・シルエット・クイズの画像を 1 つずつ、
+   大きな状態から叩きつけるように登場させ（--word-delay ずつずらす）、そろったら全体を「どーん！」と弾ませて揺らす */
 .site-title.--intro {
   animation: animation-title-boom 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) 1.05s both;
 }
 
-.site-title-word {
-  display: inline-block;
+.site-title.--intro .site-title-part {
   animation: animation-title-slam 0.45s cubic-bezier(0.2, 0.8, 0.3, 1)
     var(--word-delay, 0s) both;
 }
@@ -1053,16 +1082,6 @@
   height: 76%;
   background: var(--button-bg);
   animation: animation-caret-blink 0.8s steps(1) infinite;
-
-  /* まだ 1 文字も打っていない間は、行の先頭に置く */
-  &.--start {
-    position: relative;
-    top: 0.12em;
-    right: auto;
-    display: inline-block;
-    height: 1em;
-    margin-right: -2px;
-  }
 }
 
 @keyframes animation-caret-blink {
@@ -1073,7 +1092,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .site-title.--intro,
-  .site-title-word,
+  .site-title.--intro .site-title-part,
   .site-lead-caret {
     animation: none;
   }

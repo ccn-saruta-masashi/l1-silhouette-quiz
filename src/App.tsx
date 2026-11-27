@@ -10,7 +10,7 @@ import { LivlyProfileModal } from './components/LivlyProfileModal'
 import { NextIcon } from './components/NextIcon'
 import { QuizProgress } from './components/QuizProgress'
 import { SpeechBubble } from './components/SpeechBubble'
-import { IntroTitle, TypewriterLead } from './components/TitleIntro'
+import { SiteTitle, TypewriterLead } from './components/TitleIntro'
 import { celebrate, stopConfetti } from './services/Confetti'
 import { fetchData } from './services/PictureBookApi'
 import { playRankSound } from './services/RankSounds'
@@ -84,11 +84,7 @@ function Layout({
           </>
         ) : (
           <>
-            {intro ? (
-              <IntroTitle />
-            ) : (
-              <h1 className="site-title">リヴリーシルエットクイズ</h1>
-            )}
+            <SiteTitle intro={intro} />
             {showLead &&
               (intro ? (
                 <TypewriterLead onDone={onIntroEnd} />
