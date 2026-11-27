@@ -32,6 +32,7 @@ export function LivlyProfileModal({
 }: LivlyProfileModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -81,9 +82,14 @@ export function LivlyProfileModal({
     void requestClose()
   }
 
-  // カードの外（<dialog> 自身＝背景側）を押したら閉じる
+  // 中身の外（<dialog> 自身と、中身を中央に置く白い部分）を押したら閉じる
   const closeOnBackdrop = (event: MouseEvent<HTMLDialogElement>) => {
-    if (event.target === event.currentTarget) void requestClose()
+    if (
+      event.target === event.currentTarget ||
+      event.target === bodyRef.current
+    ) {
+      void requestClose()
+    }
   }
 
   return (
@@ -96,7 +102,7 @@ export function LivlyProfileModal({
       onClick={closeOnBackdrop}
     >
       {livly && (
-        <div className="profile-modal-body">
+        <div ref={bodyRef} className="profile-modal-body">
           <button
             type="button"
             className="profile-modal-close"
