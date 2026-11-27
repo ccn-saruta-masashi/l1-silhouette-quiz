@@ -363,6 +363,14 @@
 
 /* 厚みのある角丸ボタン。選択肢と「クイズをはじめる」で共通 */
 .pill-button {
+  /* リンク（<a>）で使うときも、<button> と同じく文字を中央に置く */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+
   position: relative;
   width: 100%;
   min-height: 72px;
