@@ -22,21 +22,12 @@
   letter-spacing: 0.06em;
 }
 
-/* 見出しと説明文の間に、ボタンと同じ色の短い線を入れて区切る */
+/* タイトルの下の説明文（「めざせ研究員！」「あなたは何体 当てられるかな？」の 2 行） */
 .site-lead {
-  margin-top: 12px;
-  font-size: clamp(13px, 3.6vw, 16px);
+  margin-top: 8px;
+  font-size: clamp(16px, 4.6vw, 22px);
+  line-height: 1.6;
   letter-spacing: 0.04em;
-
-  &::before {
-    content: '';
-    display: block;
-    width: 40px;
-    height: 3px;
-    margin: 0 auto 12px;
-    border-radius: 9999px;
-    background: var(--button-bg);
-  }
 }
 
 .quiz {

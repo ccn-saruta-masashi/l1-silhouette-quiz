@@ -61,7 +61,7 @@ function Layout({
   header?: ReactNode
   /** true にすると画面を揺らす（不正解のとき） */
   shake?: boolean
-  /** false にすると説明文（「あなたは何体 当てられるかな？」）を出さない（結果画面） */
+  /** false にすると説明文（「めざせ研究員！ あなたは何体 当てられるかな？」）を出さない（結果画面） */
   showLead?: boolean
 }) {
   return (
@@ -76,7 +76,11 @@ function Layout({
           <>
             <h1 className="site-title">リヴリーシルエットクイズ</h1>
             {showLead && (
-              <p className="site-lead">あなたは何体 当てられるかな？</p>
+              <p className="site-lead">
+                めざせ研究員！
+                <br />
+                あなたは何体 当てられるかな？
+              </p>
             )}
           </>
         )}
