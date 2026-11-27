@@ -130,6 +130,9 @@ interface QuizState {
   showResult: boolean
 }
 
+/** スタート画面の「図鑑で勉強する」のリンク先（公式のリヴリー図鑑） */
+const PICTURE_BOOK_URL = 'https://www.livly.com/picturebook/'
+
 /** 選択肢を押してから結果画面に切り替えるまで、正誤のマークを見せる時間（ms） */
 const REVEAL_DURATION = 2000
 
@@ -233,7 +236,7 @@ function App() {
             </div>
           </div>
 
-          <div className="single-action">
+          <div className="single-action --stack">
             <button
               type="button"
               className="pill-button"
@@ -245,6 +248,18 @@ function App() {
               クイズをはじめる
               <NextIcon />
             </button>
+            {/* 公式のリヴリー図鑑を新しいタブで開く */}
+            <a
+              className="pill-button"
+              href={PICTURE_BOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={playTapSound}
+            >
+              図鑑で勉強する
+              <span className="visually-hidden">（新しいタブで開きます）</span>
+              <NextIcon />
+            </a>
           </div>
         </main>
         {profileModal}
