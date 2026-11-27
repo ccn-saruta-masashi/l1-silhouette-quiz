@@ -50,7 +50,7 @@
   min-width: 0;
 }
 
-/* タイトルの下の説明文（「めざせ研究員！」「あなたは何体 当てられますか？」の 2 行） */
+/* タイトルの下の説明文（「めざせ研究員！」「あなたは何匹 当てられますか？」の 2 行） */
 .site-lead {
   /* タイトル（「シルエット クイズ」）から 30px 下に置く。文字は PC で 36px。
      スマホでは 2 行目が 1 行に収まるよう、画面幅に合わせて小さくする */
@@ -187,8 +187,8 @@
   background: none;
   color: inherit;
   font: inherit;
-  /* しっぽの先（viewBox の (365.6, 351.1)）を揺れの中心にする */
-  transform-origin: 63.1% 96%;
+  /* 雲形でしっぽがないので、下端の中央を揺れの中心にする */
+  transform-origin: 50% 100%;
   animation: animation-bubble-sway 3s ease-in-out infinite alternate;
 
   @media (max-width: 480px) {
@@ -236,7 +236,7 @@
 /* 右上の「?」のバッジ。吹き出しの右上の縁に少し重ねて置く（大きさは吹き出しの幅の 19%） */
 .speech-bubble-badge {
   position: absolute;
-  top: calc(-6% + 5px);
+  top: calc(-6% + 25px);
   right: -3%;
   width: 19%;
   aspect-ratio: 1;
@@ -247,7 +247,8 @@
 .speech-bubble-text {
   position: absolute;
   left: 50%;
-  top: 43.8%;
+  /* 雲形の上下の中央（viewBox の y ≒ 183） */
+  top: 50%;
   transform: translate(-50%, -50%);
   width: 80%;
   font-size: clamp(18px, 5.4vw, 26px);
