@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import bubbleUrl from '../assets/fukidashi.svg'
+import questionUrl from '../assets/question.svg'
 
 interface SpeechBubbleProps {
   children: ReactNode
@@ -11,25 +13,27 @@ interface SpeechBubbleProps {
 }
 
 /**
- * リヴリーの問いかけを出す吹き出し。突端（下側）を中心にゆっくり左右に揺れる。
- * 形は SVG で描き、文字は HTML で重ねる（Web フォントと改行をそのまま使うため）
+ * リヴリーの問いかけを出す吹き出し。しっぽの先を支点にゆっくり左右に揺れる。
+ * 形は素材の SVG（assets/fukidashi.svg）を画像で敷き、右上に「?」のバッジ（assets/question.svg）を置く。
+ * 文字は HTML で重ねる
+ * （Web フォントと改行をそのまま使うため）
  */
 export function SpeechBubble({ children, onClick, label }: SpeechBubbleProps) {
   const body = (
     <>
-      <svg
+      <img
         className="speech-bubble-shape"
-        viewBox="0 0 320 224"
-        aria-hidden="true"
-      >
-        {/* 楕円の本体と、左下へ伸びる突端を 1 本の線で描く */}
-        <path d="M 212 165 A 148 80 0 1 0 178 169.4 L 166 218 Z" />
-        {/* 右上の「?」バッジ */}
-        <circle className="speech-bubble-badge" cx="284" cy="38" r="30" />
-        <text className="speech-bubble-badge-text" x="284" y="38">
-          ?
-        </text>
-      </svg>
+        src={bubbleUrl}
+        alt=""
+        draggable={false}
+      />
+      {/* 右上の「?」のバッジ（assets/question.svg） */}
+      <img
+        className="speech-bubble-badge"
+        src={questionUrl}
+        alt=""
+        draggable={false}
+      />
       <span className="speech-bubble-text">{children}</span>
     </>
   )
