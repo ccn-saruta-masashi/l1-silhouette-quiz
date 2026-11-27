@@ -5,6 +5,7 @@ import {
   useRef,
 } from 'react'
 import { playPoinSound } from '../services/SoundEffects'
+import { CloseIcon } from './CloseIcon'
 import type { LivlyInfo } from '../types/api'
 
 interface LivlyProfileModalProps {
@@ -109,7 +110,7 @@ export function LivlyProfileModal({
             onClick={() => void requestClose()}
             aria-label="閉じる"
           >
-            X
+            <CloseIcon />
           </button>
           <div ref={cardRef} className="profile-card" tabIndex={-1}>
             <img

@@ -562,6 +562,9 @@
   top: 20px;
   right: 24px;
   z-index: 1;
+  /* 中の ✕ アイコン（CloseIcon）を中央に置く */
+  display: grid;
+  place-items: center;
   width: 56px;
   height: 56px;
   padding: 0;
@@ -569,9 +572,6 @@
   border-radius: 50%;
   background: var(--button-bg);
   color: var(--button-text);
-  font: inherit;
-  font-size: 30px;
-  line-height: 1;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background-color 0.15s;
@@ -592,7 +592,20 @@
     right: 16px;
     width: 44px;
     height: 44px;
-    font-size: 24px;
+  }
+}
+
+/* 「閉じる」の ✕ アイコン。NextIcon と同じく、端と角を丸めた線で描く */
+.close-icon {
+  width: 55%;
+  height: 55%;
+
+  path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 }
 
