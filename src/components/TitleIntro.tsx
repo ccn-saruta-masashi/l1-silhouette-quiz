@@ -11,7 +11,7 @@ const TITLE_TEXT = 'リヴリーシルエットクイズ'
  */
 const TITLE_ANIMATION = false
 /** 説明文。1 行ずつ並べ、タイプライター方式で 1 文字ずつ表示する */
-const LEAD_LINES = ['めざせ研究員！', 'あなたは何体 当てられますか？']
+const LEAD_LINES = ['めざせ研究員！', 'あなたは何匹 当てられますか？']
 /** 各行の先頭が、説明文全体の何文字目にあたるか */
 const LINE_OFFSETS = LEAD_LINES.map((_, index) =>
   LEAD_LINES.slice(0, index).join('').length,

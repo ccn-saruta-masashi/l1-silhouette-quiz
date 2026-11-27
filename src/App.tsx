@@ -64,7 +64,7 @@ function Layout({
   header?: ReactNode
   /** true にすると画面を揺らす（不正解のとき） */
   shake?: boolean
-  /** false にすると説明文（「めざせ研究員！ あなたは何体 当てられますか？」）を出さない（結果画面） */
+  /** false にすると説明文（「めざせ研究員！ あなたは何匹 当てられますか？」）を出さない（結果画面） */
   showLead?: boolean
   /**
    * true にするとタイトルを派手に登場させ、説明文をタイプライター方式で表示する（ページを開いたとき）。
@@ -92,7 +92,7 @@ function Layout({
                 <p className="site-lead">
                   めざせ研究員！
                   <br />
-                  あなたは何体 当てられますか？
+                  あなたは何匹 当てられますか？
                 </p>
               ))}
           </>
@@ -240,7 +240,7 @@ function App() {
           {/* タイトルと説明文の演出が終わるまでは、場所だけ取って隠しておき、終わったら登場させる */}
           <div className={`livly-stage ${introDone ? '--appear' : '--waiting'}`}>
             <ProfileBubble livly={featured} onOpen={openProfile}>
-              わたしは
+              この子は
               <br />
               どんなリヴリー？
             </ProfileBubble>
